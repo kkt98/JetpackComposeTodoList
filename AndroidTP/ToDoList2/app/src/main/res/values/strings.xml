@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ToDoList</string>
+    <string name="square">square</string>
+    <string name="done">done</string>
+    <string name="event">event</string>
+    <string name="privacy">privacy</string>
+    <string name="trash">trash</string>
+</resources>
