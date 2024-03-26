@@ -63,4 +63,5 @@ fun TodoRow(
             contentDescription = stringResource(id = todo.icons.contentDescription) // 아이콘에 대한 접근성 설명. 스크린 리더 등이 사용하는 텍스트입니다.
         )
     }
+
 }
