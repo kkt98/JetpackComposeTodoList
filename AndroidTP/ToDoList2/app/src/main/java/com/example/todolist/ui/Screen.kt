@@ -1,12 +1,10 @@
 package com.example.todolist.ui
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,9 +13,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 
 @Composable
 fun Screen(
@@ -51,6 +52,8 @@ fun TodoRow(
     onItemClick: (Data) -> Unit, // 할 일 항목 클릭 시 호출될 콜백 함수. Data 객체를 매개변수로 받아 사용자 정의 동작을 수행합니다.
     modifier: Modifier // 이 UI 요소에 적용할 Modifiers. Modifiers를 통해 외형, 레이아웃, 동작 등을 커스터마이즈할 수 있습니다.
 ) {
+
+    // 할 일 항목을 나타내는 UI 구성 요소입니다.
     Row( // 가로로 요소를 나열하는 컴포저블 함수. 여기서는 할 일의 텍스트와 아이콘을 가로로 나열합니다.
         modifier = modifier
             .clickable { onItemClick(todo) } // 할 일 항목을 클릭할 수 있게 하며, 클릭 시 onItemClick 콜백 함수를 호출합니다.
@@ -58,10 +61,22 @@ fun TodoRow(
         horizontalArrangement = Arrangement.SpaceBetween // Row 내의 요소들 사이에 공간을 균등하게 배치합니다.
     ) {
         Text(todo.task) // 할 일 항목의 텍스트를 표시합니다. Data 객체의 'task' 속성 값을 사용합니다.
+
+        val iconColor = remember(todo.id) { randomColor() }
+
         Icon( // 할 일 항목과 연관된 아이콘을 표시합니다.
             imageVector = todo.icons.imageVector, // ImageVector를 통해 아이콘 이미지를 지정합니다. Data 객체에서 아이콘 정보를 가져옵니다.
+            tint = iconColor, // 랜덤한 색상을 아이콘의 색상으로 설정합니다.
             contentDescription = stringResource(id = todo.icons.contentDescription) // 아이콘에 대한 접근성 설명. 스크린 리더 등이 사용하는 텍스트입니다.
         )
     }
-
+}
+// 랜덤한 색상을 생성하는 함수입니다.
+fun randomColor(): Color {
+    return Color(
+        red = Random.nextInt(256),
+        green = Random.nextInt(256),
+        blue = Random.nextInt(256),
+        alpha = 255
+    )
 }
