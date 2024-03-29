@@ -7,7 +7,7 @@ import com.example.todolist.ui.Data
 
 class TodoViewModel: ViewModel() {
 
-    private val _todoItem = MutableLiveData<List<Data>>()
+    private val _todoItem = MutableLiveData(listOf<Data>())
     val todoItem: LiveData<List<Data>> = _todoItem
 
     fun addItem(item: Data) {

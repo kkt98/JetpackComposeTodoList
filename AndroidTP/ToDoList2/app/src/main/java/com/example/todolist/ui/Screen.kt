@@ -5,15 +5,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -27,6 +33,11 @@ fun Screen(
     onRemoveItem: (Data) -> Unit // 항목을 제거하는 함수. 이 함수도 Data 객체를 인자로 받습니다.
 ) {
     Column { // 세로로 구성 요소를 나열하는 컴포저블
+
+        TodoInputBackground(elevate = true, modifier = Modifier.fillMaxWidth()) {
+            TodoInput(onInputComplete = onAddItem)
+        }
+
         LazyColumn(modifier = Modifier.weight(1f), // 화면에 맞게 항목들을 동적으로 로딩하는 리스트 뷰
             contentPadding = PaddingValues(8.dp)) { // 컨텐츠 주변에 8dp의 패딩을 추가
 
@@ -38,10 +49,14 @@ fun Screen(
         }
 
         Button(onClick = { onAddItem(RandomData())}, // 클릭 시 onAddItem 함수를 호출하여 새로운 항목을 추가
+            colors = ButtonDefaults.buttonColors(
+                Color.Blue
+            ),
             modifier = Modifier
                 .padding(16.dp) // 버튼 주변에 16dp의 패딩을 추가
                 .fillMaxWidth()) { // 너비를 최대로 설정
-            Text(text = "Add an Item") // 버튼에 표시될 텍스트
+            Text(text = "Add an Item",
+              color = Color.Green  ) // 버튼에 표시될 텍스트
         }
     }
 }
@@ -71,6 +86,68 @@ fun TodoRow(
         )
     }
 }
+
+@Composable
+fun TodoInputTextFiled(text: String, onTextChange:(String) -> Unit, modifier: Modifier) {
+
+    // TodoListInputText를 호출하여 입력 필드를 렌더링합니다.
+    TodoListInputText(
+        text = text,
+        onTextChange = onTextChange,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun TodoInput(onInputComplete:(Data) -> Unit) {
+
+    // 입력 필드에 입력된 텍스트를 추적하는 상태를 정의합니다.
+    val (text, setText) = remember {
+        mutableStateOf("")
+    }
+
+    val (icon, setIcon) = remember {
+        mutableStateOf(ToDoIcons.Default)
+    }
+
+    val iconVisible = text.isNotBlank()
+
+    // 입력 필드와 추가 버튼을 감싸는 Column을 정의합니다.
+    Column {
+        // 입력 필드와 추가 버튼이 포함된 Row를 정의합니다.
+        Row(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp)
+        ) {
+            // 입력 필드를 렌더링합니다.
+            TodoInputTextFiled(
+                text = text, // 현재 입력된 텍스트를 전달합니다.
+                onTextChange = setText, // 텍스트가 변경될 때 호출되는 콜백 함수를 전달합니다.
+                modifier = Modifier // Modifier를 전달합니다.
+                    .weight(1f) // 입력 필드가 차지하는 가로 공간을 설정합니다.
+                    .padding(end = 8.dp) // 입력 필드 우측에 간격을 설정합니다.
+            )
+
+            // 추가 버튼을 렌더링합니다.
+            TodoEditButton(
+                onClick = { onInputComplete(Data(text, icon))
+                          setIcon(ToDoIcons.Default)
+                          setText("")}, // 버튼이 클릭되었을 때 호출되는 콜백 함수를 전달합니다.
+                text = "Add", // 버튼에 표시되는 텍스트를 전달합니다.
+                modifier = Modifier.align(Alignment.CenterVertically), // 버튼을 수직으로 정렬하는 Modifier를 전달합니다.
+                enable = text.isNotBlank() // 버튼 활성화 여부를 텍스트가 비어있지 않은지 여부로 설정합니다.
+            )
+        }
+        if (iconVisible) {
+            IconRow(icon = icon, onIconChange = setIcon)
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+
 // 랜덤한 색상을 생성하는 함수입니다.
 fun randomColor(): Color {
     return Color(

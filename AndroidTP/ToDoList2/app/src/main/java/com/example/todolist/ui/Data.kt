@@ -16,12 +16,15 @@ enum class ToDoIcons(val imageVector: ImageVector,@StringRes val contentDescript
     Done(Icons.Default.Done, R.string.done),
     Event(Icons.Default.Event, R.string.event),
     Privacy(Icons.Default.PrivacyTip, R.string.privacy),
-    Trash(Icons.Default.RestoreFromTrash, R.string.trash)
+    Trash(Icons.Default.RestoreFromTrash, R.string.trash);
 
+    companion object {
+        val Default = Square
+    }
 
 }
 data class Data (
     val task: String,
-    val icons: ToDoIcons = ToDoIcons.Square,
+    val icons: ToDoIcons = ToDoIcons.Default,
     val id: UUID = UUID.randomUUID()
 )

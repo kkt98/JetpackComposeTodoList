@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             ToDoListTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -42,4 +41,18 @@ class MainActivity : ComponentActivity() {
 private fun todoScreenActivity(todoViewModel: TodoViewModel) {
     val items:List<Data> by todoViewModel.todoItem.observeAsState(listOf())
     Screen(items = items, onAddItem = {todoViewModel.addItem(it)}, onRemoveItem = {todoViewModel.removeItem(it)})
+}
+
+@Preview
+@Composable
+fun TodoScreenActivityPreview() {
+    val viewModel = TodoViewModel() // 적절한 TodoViewModel 인스턴스를 생성합니다.
+    val items = listOf( // 적절한 목록 아이템을 만듭니다.
+        Data(task = "Task 1"),
+        Data(task = "Task 2"),
+        Data(task = "Task 3")
+    )
+    ToDoListTheme {
+        todoScreenActivity(todoViewModel = viewModel)
+    }
 }
