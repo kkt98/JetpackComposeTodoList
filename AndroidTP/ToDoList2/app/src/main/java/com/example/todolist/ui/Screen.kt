@@ -16,7 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -87,16 +86,16 @@ fun TodoRow(
     }
 }
 
-@Composable
-fun TodoInputTextFiled(text: String, onTextChange:(String) -> Unit, modifier: Modifier) {
-
-    // TodoListInputText를 호출하여 입력 필드를 렌더링합니다.
-    TodoListInputText(
-        text = text,
-        onTextChange = onTextChange,
-        modifier = modifier
-    )
-}
+//@Composable
+//fun TodoInputTextFiled(text: String, onTextChange:(String) -> Unit, modifier: Modifier) {
+//
+//    // TodoListInputText를 호출하여 입력 필드를 렌더링합니다.
+//    TodoInputText(
+//        text = text,
+//        onTextChange = onTextChange,
+//        modifier = modifier
+//    )
+//}
 
 @Composable
 fun TodoInput(onInputComplete:(Data) -> Unit) {
@@ -112,7 +111,32 @@ fun TodoInput(onInputComplete:(Data) -> Unit) {
 
     val iconVisible = text.isNotBlank()
 
+    val submit = {  onInputComplete(Data(text, icon))
+        setIcon(ToDoIcons.Default)
+        setText("")
+    }
+
     // 입력 필드와 추가 버튼을 감싸는 Column을 정의합니다.
+    TodoItemInput(
+        text = text,
+        onTextChange = setText,
+        submit = submit,
+        iconVisible = iconVisible,
+        icon = icon,
+        onIconChange = setIcon
+    )
+}
+
+// 입력 필드와 추가 버튼을 감싸는 Column을 정의합니다.
+@Composable
+fun TodoItemInput(
+    text: String,
+    onTextChange: (String) -> Unit,
+    submit: () -> Unit,
+    iconVisible: Boolean,
+    icon: ToDoIcons,
+    onIconChange: (ToDoIcons) -> Unit
+) {
     Column {
         // 입력 필드와 추가 버튼이 포함된 Row를 정의합니다.
         Row(
@@ -121,26 +145,25 @@ fun TodoInput(onInputComplete:(Data) -> Unit) {
                 .padding(top = 8.dp)
         ) {
             // 입력 필드를 렌더링합니다.
-            TodoInputTextFiled(
+            TodoInputText(
                 text = text, // 현재 입력된 텍스트를 전달합니다.
-                onTextChange = setText, // 텍스트가 변경될 때 호출되는 콜백 함수를 전달합니다.
+                onTextChange = onTextChange, // 텍스트가 변경될 때 호출되는 콜백 함수를 전달합니다.
                 modifier = Modifier // Modifier를 전달합니다.
                     .weight(1f) // 입력 필드가 차지하는 가로 공간을 설정합니다.
-                    .padding(end = 8.dp) // 입력 필드 우측에 간격을 설정합니다.
+                    .padding(end = 8.dp), // 입력 필드 우측에 간격을 설정합니다.
+                onImeAction = submit
             )
 
             // 추가 버튼을 렌더링합니다.
             TodoEditButton(
-                onClick = { onInputComplete(Data(text, icon))
-                          setIcon(ToDoIcons.Default)
-                          setText("")}, // 버튼이 클릭되었을 때 호출되는 콜백 함수를 전달합니다.
+                onClick = submit, // 버튼이 클릭되었을 때 호출되는 콜백 함수를 전달합니다.
                 text = "Add", // 버튼에 표시되는 텍스트를 전달합니다.
                 modifier = Modifier.align(Alignment.CenterVertically), // 버튼을 수직으로 정렬하는 Modifier를 전달합니다.
                 enable = text.isNotBlank() // 버튼 활성화 여부를 텍스트가 비어있지 않은지 여부로 설정합니다.
             )
         }
         if (iconVisible) {
-            IconRow(icon = icon, onIconChange = setIcon)
+            IconRow(icon = icon, onIconChange = onIconChange)
         } else {
             Spacer(modifier = Modifier.height(16.dp))
         }
