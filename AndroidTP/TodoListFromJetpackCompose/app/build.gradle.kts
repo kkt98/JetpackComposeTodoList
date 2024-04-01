@@ -72,4 +72,14 @@ dependencies {
     // Navigation
     implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation ("androidx.compose.material:material:1.4.2")
+
+    // The view calendar library
+    implementation ("com.kizitonwose.calendar:view:2.5.0")
+
+    // The compose calendar library
+    implementation ("com.kizitonwose.calendar:compose:2.5.0")
+
+    implementation ("androidx.compose.ui:ui:1.6.4")
+    implementation ("androidx.compose.material:material:1.6.4")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.6.4")
 }
