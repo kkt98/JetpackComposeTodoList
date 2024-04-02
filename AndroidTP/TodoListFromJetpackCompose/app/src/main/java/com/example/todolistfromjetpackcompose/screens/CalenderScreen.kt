@@ -2,93 +2,130 @@ package com.example.todolistfromjetpackcompose.screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.RadioButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.todolistfromjetpackcompose.Greeting
 import com.example.todolistfromjetpackcompose.ui.theme.TodoListFromJetpackComposeTheme
-import java.time.LocalDate
+import io.github.boguszpawlowski.composecalendar.SelectableCalendar
+import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
+import io.github.boguszpawlowski.composecalendar.selection.DynamicSelectionState
+import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAdjusters
-import java.time.temporal.WeekFields
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalenderScreen(yearMonth: YearMonth) {
-    val daysOfWeek = listOf("일", "월", "화", "수", "목", "금", "토")
-    val firstDayOfMonth = yearMonth.atDay(1).with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY))
-    val lastDayOfMonth = yearMonth.atEndOfMonth().with(TemporalAdjusters.nextOrSame(java.time.DayOfWeek.SATURDAY))
-    var currentDay = firstDayOfMonth
-    val dates = mutableListOf<LocalDate>()
+    val calendarState = rememberSelectableCalendarState(
+        initialSelectionMode = SelectionMode.Single
+    )
+    var showDialog by remember { mutableStateOf(false) }
+    val selectedDate = calendarState.selectionState.selection.firstOrNull()
 
-    while (currentDay.isBefore(lastDayOfMonth) || currentDay.isEqual(lastDayOfMonth)) {
-        dates.add(currentDay)
-        currentDay = currentDay.plusDays(1)
-    }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = yearMonth.format(DateTimeFormatter.ofPattern("yyyy MMMM")),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        LazyVerticalGrid(columns = GridCells.Fixed(7)) {
-            items(daysOfWeek) { dayOfWeek ->
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .height(48.dp)
-                ) {
-                    Text(text = dayOfWeek)
+    Scaffold(
+        floatingActionButton = {
+            if (selectedDate != null) { // 날짜가 선택되었을 때만 버튼 표시
+                FloatingActionButton(onClick = { showDialog = true }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add")
                 }
             }
         }
+    ) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(it)
+        ) {
+            SelectableCalendar(calendarState = calendarState)
 
-        LazyVerticalGrid(columns = GridCells.Fixed(7)) {
-            items(dates) { date ->
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .height(48.dp)
-                ) {
-                    if (date.month == yearMonth.month) {
-                        Text(text = date.dayOfMonth.toString())
-                    } else {
-                        // 이전 또는 다음 달의 날짜는 표시하지 않음
-                    }
-                }
+            if (showDialog) {
+                ScheduleDialog(
+                    onDismissRequest = { showDialog = false },
+                    selectedDate = selectedDate
+                )
             }
         }
     }
 }
 
+@Composable
+fun ScheduleDialog(onDismissRequest: () -> Unit, selectedDate: java.time.LocalDate?) {
+    var text by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("일정 추가") },
+        text = {
+            Column {
+                Text("선택된 날자: ${selectedDate.toString()}")
+                Spacer(Modifier.fillMaxWidth().height(16.dp))
+                TextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismissRequest) {
+                Text("추가")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismissRequest) {
+                Text("취소")
+            }
+        }
+    )
+}
+
+@Composable
+private fun SelectionControls(
+    selectionState: DynamicSelectionState,
+) {
+    Text(
+        text = "Calendar Selection Mode",
+        style = MaterialTheme.typography.h5,
+    )
+    SelectionMode.values().forEach { selectionMode ->
+        Row(modifier = Modifier.fillMaxWidth()) {
+            RadioButton(
+                selected = selectionState.selectionMode == selectionMode,
+                onClick = { selectionState.selectionMode = selectionMode }
+            )
+            Text(text = selectionMode.name)
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+
+    Text(
+        text = "Selection: ${selectionState.selection.joinToString { it.toString() }}",
+        style = MaterialTheme.typography.h6,
+    )
+}
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable

@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id ("kotlin-kapt")
+
 }
 
 android {
@@ -32,6 +34,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -73,13 +76,20 @@ dependencies {
     implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation ("androidx.compose.material:material:1.4.2")
 
-    // The view calendar library
-    implementation ("com.kizitonwose.calendar:view:2.5.0")
-
-    // The compose calendar library
-    implementation ("com.kizitonwose.calendar:compose:2.5.0")
-
     implementation ("androidx.compose.ui:ui:1.6.4")
     implementation ("androidx.compose.material:material:1.6.4")
     implementation ("androidx.compose.ui:ui-tooling-preview:1.6.4")
+
+    implementation ("io.github.boguszpawlowski.composecalendar:composecalendar:1.2.0")
+    // separate artifact with utilities for working with kotlinx-datetime
+    implementation ("io.github.boguszpawlowski.composecalendar:kotlinx-datetime:1.2.0")
+
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt ("androidx.room:room-compiler:2.6.1")
+    // Kotlin Coroutines 사용 시
+    implementation ("androidx.room:room-ktx:2.6.1")
+
+
 }
