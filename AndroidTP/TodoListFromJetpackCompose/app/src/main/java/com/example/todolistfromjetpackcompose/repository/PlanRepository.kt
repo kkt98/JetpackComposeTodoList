@@ -2,8 +2,9 @@ package com.example.todolistfromjetpackcompose.repository
 
 import com.example.todolistfromjetpackcompose.room.PlanDao
 import com.example.todolistfromjetpackcompose.room.PlanEntity
+import javax.inject.Inject
 
-class PlanRepository(private val planDao: PlanDao) {
+class PlanRepository @Inject constructor(private val planDao: PlanDao) {
 
     suspend fun insertSchedule(planEntity: PlanEntity) = planDao.insertPlan(planEntity)
     fun getSchedulesByDate(date: String) = planDao.getPlansByDate(date)

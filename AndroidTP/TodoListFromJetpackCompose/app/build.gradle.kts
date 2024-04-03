@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id ("kotlin-kapt")
+    id ("com.google.dagger.hilt.android")
 
 }
 
@@ -90,6 +91,9 @@ dependencies {
     kapt ("androidx.room:room-compiler:2.6.1")
     // Kotlin Coroutines 사용 시
     implementation ("androidx.room:room-ktx:2.6.1")
+
+    implementation ("com.google.dagger:hilt-android:2.50")
+    kapt ("com.google.dagger:hilt-android-compiler:2.50")
 
 
 }

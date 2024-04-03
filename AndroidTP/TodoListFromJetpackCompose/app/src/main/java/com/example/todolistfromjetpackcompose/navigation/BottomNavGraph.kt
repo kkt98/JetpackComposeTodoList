@@ -18,7 +18,7 @@ fun BottomNavGraph(navController: NavHostController) {
         startDestination = BottomNavItem.Calender.route
     ) {
         composable(route = BottomNavItem.Calender.route){
-            CalenderScreen(YearMonth.now())
+            CalenderScreen()
         }
         composable(route = BottomNavItem.List.route){
             PlanListScreen()

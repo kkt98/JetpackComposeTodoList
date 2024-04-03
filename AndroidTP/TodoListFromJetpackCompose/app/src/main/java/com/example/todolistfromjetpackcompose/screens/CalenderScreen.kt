@@ -1,6 +1,8 @@
 package com.example.todolistfromjetpackcompose.screens
 
 import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,28 +24,52 @@ import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolistfromjetpackcompose.ui.theme.TodoListFromJetpackComposeTheme
+import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
 import io.github.boguszpawlowski.composecalendar.SelectableCalendar
 import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
 import io.github.boguszpawlowski.composecalendar.selection.DynamicSelectionState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
+import java.time.LocalDate
 import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CalenderScreen(yearMonth: YearMonth) {
+fun CalenderScreen() {
+    val viewModel: CalenderPlanViewModel = viewModel() // Hilt가 자동으로 의존성을 주입합니다.
+    val context = LocalContext.current
+    val saveSuccess by viewModel.saveSuccess.collectAsState()
+    val schedules by viewModel.schedules.collectAsState()
+
+    LaunchedEffect(saveSuccess) {
+        if (saveSuccess) {
+            Toast.makeText(context, "저장 성공", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val calendarState = rememberSelectableCalendarState(
-        initialSelectionMode = SelectionMode.Single
+        initialSelectionMode = SelectionMode.Single,
     )
     var showDialog by remember { mutableStateOf(false) }
     val selectedDate = calendarState.selectionState.selection.firstOrNull()
+
+
+    LaunchedEffect(key1 = selectedDate) {
+        selectedDate?.let {
+            viewModel.getSchedulesByDate(it.toString())
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -64,15 +90,26 @@ fun CalenderScreen(yearMonth: YearMonth) {
             if (showDialog) {
                 ScheduleDialog(
                     onDismissRequest = { showDialog = false },
-                    selectedDate = selectedDate
+                    selectedDate = selectedDate,
+                    onSave = { date, plan ->
+                        viewModel.insertSchedule(date, plan)
+                    }
                 )
             }
         }
     }
+
+    schedules.forEach { schedule ->
+        Log.d("asdadas", schedule.plan)
+    }
 }
 
 @Composable
-fun ScheduleDialog(onDismissRequest: () -> Unit, selectedDate: java.time.LocalDate?) {
+fun ScheduleDialog(
+    onDismissRequest: () -> Unit,
+    selectedDate: java.time.LocalDate?,
+    onSave: (String, String) -> Unit // 일정 저장 콜백 추가
+) {
     var text by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -90,7 +127,12 @@ fun ScheduleDialog(onDismissRequest: () -> Unit, selectedDate: java.time.LocalDa
             }
         },
         confirmButton = {
-            Button(onClick = onDismissRequest) {
+            Button(onClick = {
+                selectedDate?.let {
+                    onSave(it.toString(), text) // 일정 저장
+                }
+                onDismissRequest()
+            }) {
                 Text("추가")
             }
         },
@@ -125,12 +167,4 @@ private fun SelectionControls(
         text = "Selection: ${selectionState.selection.joinToString { it.toString() }}",
         style = MaterialTheme.typography.h6,
     )
-}
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TodoListFromJetpackComposeTheme {
-        CalenderScreen(YearMonth.now())
-    }
 }
