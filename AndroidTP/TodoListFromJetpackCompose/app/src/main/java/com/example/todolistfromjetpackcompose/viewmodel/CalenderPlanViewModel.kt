@@ -1,7 +1,5 @@
 package com.example.todolistfromjetpackcompose.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolistfromjetpackcompose.repository.PlanRepository
@@ -29,6 +27,7 @@ class CalenderPlanViewModel @Inject constructor(
             val planEntity = PlanEntity(date = date, plan = plan)
             planRepository.insertSchedule(planEntity)
             _saveSuccess.value = true
+            _saveSuccess.value = false
         }
     }
 

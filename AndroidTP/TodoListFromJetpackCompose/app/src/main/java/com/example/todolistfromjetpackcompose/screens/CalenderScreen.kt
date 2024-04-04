@@ -34,10 +34,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolistfromjetpackcompose.ui.theme.TodoListFromJetpackComposeTheme
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.boguszpawlowski.composecalendar.SelectableCalendar
+import io.github.boguszpawlowski.composecalendar.StaticCalendar
+import io.github.boguszpawlowski.composecalendar.day.DayState
 import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
 import io.github.boguszpawlowski.composecalendar.selection.DynamicSelectionState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
@@ -46,8 +51,8 @@ import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CalenderScreen() {
-    val viewModel: CalenderPlanViewModel = viewModel() // Hilt가 자동으로 의존성을 주입합니다.
+fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
+
     val context = LocalContext.current
     val saveSuccess by viewModel.saveSuccess.collectAsState()
     val schedules by viewModel.schedules.collectAsState()
@@ -65,10 +70,14 @@ fun CalenderScreen() {
     val selectedDate = calendarState.selectionState.selection.firstOrNull()
 
 
-    LaunchedEffect(key1 = selectedDate) {
+    LaunchedEffect(selectedDate) {
         selectedDate?.let {
             viewModel.getSchedulesByDate(it.toString())
         }
+    }
+
+    schedules.forEach {
+        Log.d("Asdasdasd", it.plan)
     }
 
     Scaffold(
@@ -85,7 +94,9 @@ fun CalenderScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(it)
         ) {
-            SelectableCalendar(calendarState = calendarState)
+            SelectableCalendar(
+                calendarState = calendarState,
+            )
 
             if (showDialog) {
                 ScheduleDialog(
@@ -97,10 +108,6 @@ fun CalenderScreen() {
                 )
             }
         }
-    }
-
-    schedules.forEach { schedule ->
-        Log.d("asdadas", schedule.plan)
     }
 }
 
@@ -122,7 +129,7 @@ fun ScheduleDialog(
                 TextField(
                     value = text,
                     onValueChange = { text = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },

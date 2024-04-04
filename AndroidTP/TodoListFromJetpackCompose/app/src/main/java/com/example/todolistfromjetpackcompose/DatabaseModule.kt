@@ -2,6 +2,7 @@ package com.example.todolistfromjetpackcompose
 
 import android.content.Context
 import androidx.room.Room
+import com.example.todolistfromjetpackcompose.repository.PlanRepository
 import com.example.todolistfromjetpackcompose.room.PlanDao
 import com.example.todolistfromjetpackcompose.room.PlanDatabase
 import dagger.Module
@@ -27,5 +28,13 @@ object DatabaseModule {
     @Provides
     fun providePlanDao(database: PlanDatabase): PlanDao {
         return database.planDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providePlanRepository(
+        planDao: PlanDao
+    ) : PlanRepository {
+        return PlanRepository(planDao)
     }
 }
