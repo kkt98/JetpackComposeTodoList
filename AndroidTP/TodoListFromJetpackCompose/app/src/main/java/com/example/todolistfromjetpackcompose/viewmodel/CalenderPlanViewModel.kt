@@ -39,4 +39,15 @@ class CalenderPlanViewModel @Inject constructor(
         }
     }
 
+    fun deleteSchedule(planEntity: PlanEntity) {
+        viewModelScope.launch {
+            planRepository.deletePlan(planEntity)
+            // 일정 삭제 후, 해당 날짜의 일정을 다시 로드하여 UI를 업데이트 합니다.
+            getSchedulesByDate(planEntity.date)
+            // 삭제 성공 알림 (예: 상태 플래그 변경)
+            _saveSuccess.value = true
+            _saveSuccess.value = false
+        }
+    }
+
 }
