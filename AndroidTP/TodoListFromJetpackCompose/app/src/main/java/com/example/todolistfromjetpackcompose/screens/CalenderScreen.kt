@@ -1,14 +1,15 @@
 package com.example.todolistfromjetpackcompose.screens
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -105,21 +106,24 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SchedulesList(schedules: List<PlanEntity>, viewModel: CalenderPlanViewModel) {
+fun SchedulesList(
+    schedules: List<PlanEntity>,
+    viewModel: CalenderPlanViewModel,
+) {
     LazyColumn {
         items(schedules) { schedule ->
             val swipeableState = rememberSwipeableState(initialValue = 0)
             val coroutineScope = rememberCoroutineScope()
             val squareSize = 80.dp
             val sizePx = with(LocalDensity.current) { squareSize.toPx() }
-            val anchors = mapOf(0f to 0, -sizePx to 1)
+            val anchors = mapOf(0f to 0, -sizePx * 2 to 1)  // 수정 버튼을 위한 앵커 값 조정
 
             Box(
                 modifier = Modifier
-                    .padding(8.dp)  // 상위 박스 주변에 패딩 추가
+                    .padding(8.dp)
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))  // 경계선 추가
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
                     .swipeable(
                         state = swipeableState,
                         anchors = anchors,
@@ -128,15 +132,33 @@ fun SchedulesList(schedules: List<PlanEntity>, viewModel: CalenderPlanViewModel)
                         velocityThreshold = 1000.dp
                     )
             ) {
-                // 삭제 버튼을 포함하는 Box를 정의합니다. 오른쪽 끝에 위치합니다.
-                Box(
+                // 수정 및 삭제 버튼을 포함하는 Box를 정의합니다. 오른쪽 끝에 위치합니다.
+                Row(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
+                        .width(squareSize * 2)  // 두 버튼의 전체 너비
                 ) {
+                    // 수정 버튼
                     TextButton(
                         onClick = {
                             coroutineScope.launch {
-//                                swipeableState.animateTo(0, tween(600, 0))
+//                                viewModel.editSchedule(schedule)
+                                swipeableState.snapTo(0)
+                            }
+                        },
+                        modifier = Modifier
+                            .width(80.dp)
+                            .fillMaxHeight(),
+                        colors = ButtonDefaults.textButtonColors(Color.Blue),
+                        shape = RoundedCornerShape(0.dp)  // 모서리를 둥글게 처리하지 않음
+                    ) {
+                        Text(text = "수정", color = Color.White)
+                    }
+
+                    // 삭제 버튼
+                    TextButton(
+                        onClick = {
+                            coroutineScope.launch {
                                 viewModel.deleteSchedule(schedule)
                                 swipeableState.snapTo(0)
                             }
@@ -154,10 +176,9 @@ fun SchedulesList(schedules: List<PlanEntity>, viewModel: CalenderPlanViewModel)
                 // 스와이프로 오프셋이 조정된 상태에서 카드 위치를 다시 조정하는 Box를 정의합니다.
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 8.dp)  // 내부 컨텐츠가 테두리 안에서만 스와이프되도록 패딩 추가
                         .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
-                        .background(Color.White)
-                        .fillParentMaxWidth()
+                        .background(Color.Cyan)
+                        .fillMaxSize()
                 ) {
                     // 스케줄 아이템을 표시하는 사용자 정의 Composable을 호출합니다.
                     ScheduleItem(schedule)
@@ -166,7 +187,6 @@ fun SchedulesList(schedules: List<PlanEntity>, viewModel: CalenderPlanViewModel)
         }
     }
 }
-
 
 @Composable
 fun ScheduleItem(schedule: PlanEntity) {
@@ -194,7 +214,10 @@ fun ScheduleDialog(
         text = {
             Column {
                 Text("선택된 날자: ${selectedDate.toString()}")
-                Spacer(Modifier.fillMaxWidth().height(16.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(16.dp))
                 TextField(
                     value = text,
                     onValueChange = { text = it },
