@@ -1,5 +1,7 @@
 package com.example.todolistfromjetpackcompose.screens
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
@@ -35,6 +37,8 @@ import androidx.compose.material.swipeable
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,8 +64,8 @@ import kotlin.math.roundToInt
 @Composable
 fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val context = LocalContext.current
-    val saveSuccess by viewModel.saveSuccess.collectAsState()
     val schedules by viewModel.schedules.collectAsState()
+    val saveSuccess by viewModel.saveSuccess.collectAsState()
 
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single,
@@ -72,6 +76,16 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     viewModel.getSchedulesByDate(
         calendarState.selectionState.selection.joinToString { it.toString() }
     )
+
+    Log.d("asdasda", saveSuccess.toString())
+
+    // saveSuccess 상태를 관찰하고 true가 되면 토스트를 표시합니다
+    SideEffect {
+        if (saveSuccess) {
+            Toast.makeText(context, "저장 완료", Toast.LENGTH_SHORT).show()
+            viewModel.resetSaveSuccess() // saveSuccess 상태를 초기화합니다
+        }
+    }
 
     Scaffold(
         floatingActionButton = {

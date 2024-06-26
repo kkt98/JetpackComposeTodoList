@@ -27,7 +27,6 @@ class CalenderPlanViewModel @Inject constructor(
             val planEntity = PlanEntity(date = date, plan = plan)
             planRepository.insertSchedule(planEntity)
             _saveSuccess.value = true
-            _saveSuccess.value = false
         }
     }
 
@@ -48,6 +47,10 @@ class CalenderPlanViewModel @Inject constructor(
             _saveSuccess.value = true
             _saveSuccess.value = false
         }
+    }
+
+    fun resetSaveSuccess() {
+        _saveSuccess.value = false
     }
 
 }
