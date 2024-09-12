@@ -1,5 +1,9 @@
 package com.example.todolistfromjetpackcompose.screens
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
@@ -35,6 +39,7 @@ import androidx.compose.material.swipeable
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +70,7 @@ import kotlin.math.roundToInt
 fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val schedules by viewModel.schedules.collectAsState()
-    val saveSuccess by viewModel.saveSuccess.collectAsState()
+    val operationStatus by viewModel.operationStatus.collectAsState() // 작업 상태를 감지
 
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single,
@@ -83,15 +88,6 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         calendarState.selectionState.selection.joinToString { it.toString() }
     )
 
-    // saveSuccess 상태를 관찰하고 true가 되면 토스트를 표시합니다
-//    SideEffect {
-//        if (saveSuccess) {
-//            Toast.makeText(context, "저장 완료", Toast.LENGTH_SHORT).show()
-//            viewModel.resetSaveSuccess() // saveSuccess 상태를 초기화합니다
-//        }
-//    }
-
-    //일정 추가 버튼 누르면 다이얼로그 띄우기
     Scaffold(
         floatingActionButton = {
             if (selectedDate != null) {
@@ -109,7 +105,6 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                 SchedulesList(schedules, viewModel)
             }
 
-            // 일정 추가 버튼을 눌렀을 때
             if (showDialog) {
                 ScheduleDialog(
                     onDismissRequest = { showDialog = false },
@@ -117,13 +112,27 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                     onSave = { date, plan ->
                         viewModel.insertSchedule(date, plan)
                     },
-                    isEditMode = false // 추가 모드
+                    isEditMode = false
                 )
             }
-
         }
     }
+
+//    // 작업 완료 시 토스트 메시지 표시
+//    LaunchedEffect(operationStatus) {
+//        operationStatus?.let {
+//            Log.d("asdasdas", it + "0")
+//// 메인 스레드에서 Toast 실행
+//            Handler(Looper.getMainLooper()).post {
+//                Toast.makeText(context, "asdasdasd", Toast.LENGTH_LONG).show()
+//            }
+//            Log.d("asdasdas", it + "1")
+//            viewModel.resetOperationStatus() // 토스트 후 상태 초기화
+//            Log.d("asdasdas", it + "2")
+//        }
+//    }
 }
+
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -133,7 +142,7 @@ fun SchedulesList(
     viewModel: CalenderPlanViewModel,
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
-    var scheduleToEdit by remember { mutableStateOf<PlanEntity?>(null) } // 수정할 일정 저장
+    var scheduleToEdit by remember { mutableStateOf<PlanEntity?>(null) }
 
     LazyColumn {
         items(schedules) { schedule ->
@@ -166,8 +175,8 @@ fun SchedulesList(
                     TextButton(
                         onClick = {
                             coroutineScope.launch {
-                                scheduleToEdit = schedule // 수정할 일정 저장
-                                showEditDialog = true // 수정 다이얼로그 표시
+                                scheduleToEdit = schedule
+                                showEditDialog = true
                                 swipeableState.snapTo(0)
                             }
                         },
@@ -200,7 +209,7 @@ fun SchedulesList(
 
                 Box(
                     modifier = Modifier
-                        .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+                        .offset { IntOffset(swipeableState.offset.value.roundToInt().coerceAtLeast(-sizePx.toInt() * 2), 0) } // 제한된 스와이프 범위
                         .background(Color.White)
                         .fillMaxSize()
                 ) {
@@ -210,34 +219,34 @@ fun SchedulesList(
         }
     }
 
-    // 수정 다이얼로그가 표시되어야 할 때
     if (showEditDialog && scheduleToEdit != null) {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd") // 변환을 위한 포맷터
-        val selectedDate = LocalDate.parse(scheduleToEdit?.date, dateFormatter) // String -> LocalDate 변환
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val selectedDate = LocalDate.parse(scheduleToEdit?.date, dateFormatter)
 
         ScheduleDialog(
             onDismissRequest = { showEditDialog = false },
-            selectedDate = selectedDate, // 변환된 LocalDate 전달
-            initialText = scheduleToEdit?.plan ?: "", // 기존 일정 내용
+            selectedDate = selectedDate,
+            initialText = scheduleToEdit?.plan ?: "",
             onSave = { date, updatedPlan ->
                 viewModel.updateSchedule(scheduleToEdit!!.copy(plan = updatedPlan))
                 showEditDialog = false
             },
-            isEditMode = true // 수정 모드
+            isEditMode = true
         )
     }
 }
 
 
+
 @Composable
 fun ScheduleItem(schedule: PlanEntity) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("날자: ${schedule.date}", style = MaterialTheme.typography.subtitle1)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("일정: ${schedule.plan}", style = MaterialTheme.typography.body1)
-        }
+    Column(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text("날자: ${schedule.date}", style = MaterialTheme.typography.subtitle1)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("일정: ${schedule.plan}", style = MaterialTheme.typography.body1)
+    }
 
 }
 
@@ -250,6 +259,7 @@ fun ScheduleDialog(
     isEditMode: Boolean = false // 수정 모드인지 추가 모드인지 구분
 ) {
     var text by remember { mutableStateOf(initialText) } // 초기 텍스트 설정
+    val context = LocalContext.current // LocalContext로 context 가져오기
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -274,6 +284,7 @@ fun ScheduleDialog(
                 selectedDate?.let {
                     onSave(it.toString(), text) // 저장 시 콜백 호출
                 }
+                Toast.makeText(context, if (isEditMode) "수정 완료" else "추가 완료", Toast.LENGTH_LONG).show()
                 onDismissRequest()
             }) {
                 Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트 변경
@@ -286,4 +297,3 @@ fun ScheduleDialog(
         }
     )
 }
-
