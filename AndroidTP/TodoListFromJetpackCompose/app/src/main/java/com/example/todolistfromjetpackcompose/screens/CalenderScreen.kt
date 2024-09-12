@@ -85,6 +85,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val selectedDate = calendarState.selectionState.selection.firstOrNull()
 
     viewModel.getSchedulesByDate(
+
         calendarState.selectionState.selection.joinToString { it.toString() }
     )
 
