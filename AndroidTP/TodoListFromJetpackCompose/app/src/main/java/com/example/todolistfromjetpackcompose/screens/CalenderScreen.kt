@@ -119,19 +119,19 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         }
     }
 
-//    // 작업 완료 시 토스트 메시지 표시
-//    LaunchedEffect(operationStatus) {
-//        operationStatus?.let {
-//            Log.d("asdasdas", it + "0")
-//// 메인 스레드에서 Toast 실행
-//            Handler(Looper.getMainLooper()).post {
-//                Toast.makeText(context, "asdasdasd", Toast.LENGTH_LONG).show()
-//            }
-//            Log.d("asdasdas", it + "1")
-//            viewModel.resetOperationStatus() // 토스트 후 상태 초기화
-//            Log.d("asdasdas", it + "2")
-//        }
-//    }
+    // 작업 완료 시 토스트 메시지 표시
+    LaunchedEffect(operationStatus) {
+        operationStatus?.let {
+            Log.d("asdasdas", it + "0")
+// 메인 스레드에서 Toast 실행
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            }
+            Log.d("asdasdas", it + "1")
+            viewModel.resetOperationStatus() // 토스트 후 상태 초기화
+            Log.d("asdasdas", it + "2")
+        }
+    }
 }
 
 
@@ -285,7 +285,7 @@ fun ScheduleDialog(
                 selectedDate?.let {
                     onSave(it.toString(), text) // 저장 시 콜백 호출
                 }
-                Toast.makeText(context, if (isEditMode) "수정 완료" else "추가 완료", Toast.LENGTH_LONG).show()
+//                Toast.makeText(context, if (isEditMode) "수정 완료" else "추가 완료", Toast.LENGTH_LONG).show()
                 onDismissRequest()
             }) {
                 Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트 변경
