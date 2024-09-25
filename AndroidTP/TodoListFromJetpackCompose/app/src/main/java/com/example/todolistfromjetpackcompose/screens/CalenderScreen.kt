@@ -293,7 +293,7 @@ fun ScheduleDialog(
         },
         dismissButton = {
             Button(onClick = onDismissRequest) {
-                Text("취소")
+                Text("취소") //asdasd
             }
         }
     )
