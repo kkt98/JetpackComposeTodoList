@@ -11,13 +11,4 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PlanListScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "PlanListScreen",
-            fontFamily = FontFamily.Serif,
-            fontSize = 22.sp)
-    }
 }
