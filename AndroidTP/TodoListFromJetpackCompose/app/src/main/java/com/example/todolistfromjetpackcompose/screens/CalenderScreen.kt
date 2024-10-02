@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todolistfromjetpackcompose.room.PlanEntity
+import com.example.todolistfromjetpackcompose.util.SchedulesList
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
 import io.github.boguszpawlowski.composecalendar.SelectableCalendar
 import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
@@ -103,7 +104,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         ) {
             SelectableCalendar(calendarState = calendarState)
             if (selectedDate != null) {
-                SchedulesList(schedules, viewModel)
+                ScheduleListScreen(viewModel)
             }
 
             if (showDialog) {
@@ -123,119 +124,28 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     LaunchedEffect(operationStatus) {
         operationStatus?.let {
             Log.d("asdasdas", it + "0")
-// 메인 스레드에서 Toast 실행
+    // 메인 스레드에서 Toast 실행
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             }
-            Log.d("asdasdas", it + "1")
             viewModel.resetOperationStatus() // 토스트 후 상태 초기화
-            Log.d("asdasdas", it + "2")
         }
     }
 }
 
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SchedulesList(
-    schedules: List<PlanEntity>,
-    viewModel: CalenderPlanViewModel,
-) {
-    var showEditDialog by remember { mutableStateOf(false) }
-    var scheduleToEdit by remember { mutableStateOf<PlanEntity?>(null) }
+fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
+    val schedules by viewModel.schedules.collectAsState()
 
-    LazyColumn {
-        items(schedules) { schedule ->
-            val swipeableState = rememberSwipeableState(initialValue = 0)
-            val coroutineScope = rememberCoroutineScope()
-            val squareSize = 80.dp
-            val sizePx = with(LocalDensity.current) { squareSize.toPx() }
-            val anchors = mapOf(0f to 0, -sizePx * 2 to 1)
-
-            Box(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                    .swipeable(
-                        state = swipeableState,
-                        anchors = anchors,
-                        thresholds = { _, _ -> FractionalThreshold(0.5f) },
-                        orientation = Orientation.Horizontal,
-                        velocityThreshold = 1000.dp
-                    )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .width(squareSize * 2)
-                ) {
-                    // 수정 버튼
-                    TextButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                scheduleToEdit = schedule
-                                showEditDialog = true
-                                swipeableState.snapTo(0)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(80.dp)
-                            .fillMaxHeight(),
-                        colors = ButtonDefaults.textButtonColors(Color.Blue),
-                        shape = RoundedCornerShape(0.dp)
-                    ) {
-                        Text(text = "수정", color = Color.White)
-                    }
-
-                    // 삭제 버튼
-                    TextButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                viewModel.deleteSchedule(schedule)
-                                swipeableState.snapTo(0)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(80.dp)
-                            .fillMaxHeight(),
-                        colors = ButtonDefaults.textButtonColors(Color.Red),
-                        shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)
-                    ) {
-                        Text(text = "삭제", color = Color.White)
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .offset { IntOffset(swipeableState.offset.value.roundToInt().coerceAtLeast(-sizePx.toInt() * 2), 0) } // 제한된 스와이프 범위
-                        .background(Color.White)
-                        .fillMaxSize()
-                ) {
-                    ScheduleItem(schedule)
-                }
-            }
+    Scaffold { paddingValues ->  // paddingValues 추가
+        Column(modifier = Modifier.padding(paddingValues)) {  // paddingValues 적용
+            SchedulesList(schedules = schedules, viewModel = viewModel)
         }
     }
-
-    if (showEditDialog && scheduleToEdit != null) {
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val selectedDate = LocalDate.parse(scheduleToEdit?.date, dateFormatter)
-
-        ScheduleDialog(
-            onDismissRequest = { showEditDialog = false },
-            selectedDate = selectedDate,
-            initialText = scheduleToEdit?.plan ?: "",
-            onSave = { date, updatedPlan ->
-                viewModel.updateSchedule(scheduleToEdit!!.copy(plan = updatedPlan))
-                showEditDialog = false
-            },
-            isEditMode = true
-        )
-    }
 }
+
 
 
 
