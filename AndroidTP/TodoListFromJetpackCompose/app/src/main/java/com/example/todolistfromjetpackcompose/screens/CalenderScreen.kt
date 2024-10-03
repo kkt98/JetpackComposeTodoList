@@ -123,7 +123,6 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     // 작업 완료 시 토스트 메시지 표시
     LaunchedEffect(operationStatus) {
         operationStatus?.let {
-            Log.d("asdasdas", it + "0")
     // 메인 스레드에서 Toast 실행
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -134,7 +133,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
 }
 
 
-
+// 일정 리스트
 @Composable
 fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val schedules by viewModel.schedules.collectAsState()
@@ -145,9 +144,6 @@ fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         }
     }
 }
-
-
-
 
 @Composable
 fun ScheduleItem(schedule: PlanEntity) {
@@ -161,6 +157,7 @@ fun ScheduleItem(schedule: PlanEntity) {
 
 }
 
+//일정 추가 다이얼로그
 @Composable
 fun ScheduleDialog(
     onDismissRequest: () -> Unit,
