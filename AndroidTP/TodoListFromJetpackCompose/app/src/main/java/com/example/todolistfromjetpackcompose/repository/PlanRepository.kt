@@ -6,6 +6,7 @@ import javax.inject.Inject
 
 class PlanRepository @Inject constructor(private val planDao: PlanDao) {
 
+    //일정 추가
     suspend fun insertSchedule(planEntity: PlanEntity) = planDao.insertPlan(planEntity)
     fun getSchedulesByDate(date: String) = planDao.getPlansByDate(date)
 
@@ -28,5 +29,8 @@ class PlanRepository @Inject constructor(private val planDao: PlanDao) {
     suspend fun deletePlanById(id: Int) {
         planDao.deletePlanById(id)
     }
+
+    // 모든 일정을 가져오는 함수 추가
+    fun getAllSchedules() = planDao.getAllPlans()
 
 }

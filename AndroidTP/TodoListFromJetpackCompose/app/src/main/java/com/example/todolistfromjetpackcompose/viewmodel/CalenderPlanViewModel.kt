@@ -61,6 +61,14 @@ class CalenderPlanViewModel @Inject constructor(
         }
     }
 
+    // 모든 일정을 가져오는 함수
+    fun getAllSchedules() {
+        viewModelScope.launch {
+            planRepository.getAllSchedules().collect { plans ->
+                _schedules.value = plans  // 모든 일정을 StateFlow로 전달
+            }
+        }
+    }
 
     // 완료 상태 초기화
     fun resetOperationStatus() {

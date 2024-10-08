@@ -30,4 +30,7 @@ interface PlanDao {
     // ID를 사용하여 일정 삭제
     @Query("DELETE FROM planentity WHERE id = :id")
     suspend fun deletePlanById(id: Int)
+
+    @Query("SELECT * FROM planentity")  // 모든 일정을 가져오는 SQL 쿼리
+    fun getAllPlans(): Flow<List<PlanEntity>>  // 모든 일정 반환
 }
