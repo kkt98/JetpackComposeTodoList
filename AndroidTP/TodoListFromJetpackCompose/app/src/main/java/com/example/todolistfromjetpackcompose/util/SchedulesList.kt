@@ -3,6 +3,7 @@ package com.example.todolistfromjetpackcompose.util
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -15,13 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.ButtonDefaults
@@ -35,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -81,6 +79,7 @@ fun SchedulesList(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .width(squareSize * 2)
+
         ) {
             // 수정 버튼
             TextButton(
@@ -90,6 +89,7 @@ fun SchedulesList(
                         swipeableState.snapTo(0)
                     }
                 },
+                enabled = swipeableState.offset.value != 0f, // 스와이프 상태에 따라 클릭 비활성화
                 modifier = Modifier
                     .width(80.dp)
                     .fillMaxHeight(),
@@ -107,6 +107,7 @@ fun SchedulesList(
                         swipeableState.snapTo(0)
                     }
                 },
+                enabled = swipeableState.offset.value != 0f, // 스와이프 상태에 따라 클릭 비활성화
                 modifier = Modifier
                     .width(80.dp)
                     .fillMaxHeight(),
