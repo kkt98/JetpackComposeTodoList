@@ -8,5 +8,6 @@ data class PlanEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val date: String,
-    val plan: String
+    val plan: String,
+    val time: String
 )

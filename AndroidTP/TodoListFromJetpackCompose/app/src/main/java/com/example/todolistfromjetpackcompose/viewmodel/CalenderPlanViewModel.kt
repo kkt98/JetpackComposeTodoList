@@ -34,9 +34,9 @@ class CalenderPlanViewModel @Inject constructor(
     }
 
     // 일정 추가 기능
-    fun insertSchedule(date: String, plan: String) {
+    fun insertSchedule(date: String, plan: String, time: String) {
         viewModelScope.launch {
-            val planEntity = PlanEntity(date = date, plan = plan)
+            val planEntity = PlanEntity(date = date, plan = plan, time = time)
             planRepository.insertSchedule(planEntity)
             getSchedulesByDate(planEntity.date)
             _operationStatus.value = "저장 완료" // 저장 완료 상태 설정

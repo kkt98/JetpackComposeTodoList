@@ -2,6 +2,7 @@ package com.example.todolistfromjetpackcompose.screens
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +41,7 @@ import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import java.time.LocalDate
 import java.time.temporal.WeekFields
+import java.util.Calendar
 import java.util.Locale
 
 @Composable
@@ -99,8 +104,8 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                 ScheduleDialog(
                     onDismissRequest = { showDialog = false },  // 다이얼로그 닫기
                     selectedDate = selectedDate,  // 선택된 날짜를 다이얼로그에 전달
-                    onSave = { date, plan ->  // 저장 버튼 클릭 시 동작 정의
-                        viewModel.insertSchedule(date, plan)  // 새로운 일정 추가
+                    onSave = { date, plan, time ->  // 저장 버튼 클릭 시 동작 정의
+                        viewModel.insertSchedule(date, plan, time)  // 새로운 일정 추가
                     },
                     isEditMode = false  // 새 일정을 추가하는 모드
                 )
@@ -130,6 +135,8 @@ fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         Column(modifier = Modifier.padding(paddingValues)) {  // paddingValues 적용
             LazyColumn {  // LazyColumn을 통해 일정 목록을 렌더링
                 items(schedules) { schedule ->  // 각 일정 항목을 개별적으로 처리
+                    Log.d("saveschedle", schedule.toString())
+
                     SchedulesList(schedule = schedule, viewModel = viewModel)  // 스와이프 가능한 아이템으로 처리
                 }
             }
@@ -138,16 +145,25 @@ fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
 }
 
 //일정 추가 다이얼로그
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleDialog(
     onDismissRequest: () -> Unit,
     selectedDate: LocalDate?,
     initialText: String = "", // 기존 텍스트를 받아서 초기화
-    onSave: (String, String) -> Unit, // 저장 콜백
+    onSave: (String, String, String) -> Unit, // 시간도 포함하여 저장 콜백
     isEditMode: Boolean = false // 수정 모드인지 추가 모드인지 구분
 ) {
     var text by remember { mutableStateOf(initialText) } // 초기 텍스트 설정
     val context = LocalContext.current // LocalContext로 context 가져오기
+
+    // 현재 시간을 가져오는 캘린더 객체
+    val currentTime = Calendar.getInstance()
+    val timePickerState = rememberTimePickerState(
+        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
+        initialMinute = currentTime.get(Calendar.MINUTE),
+        is24Hour = false,  // 24시간 형식이 아닌 12시간 형식 사용
+    )
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -160,6 +176,14 @@ fun ScheduleDialog(
                         .fillMaxWidth()
                         .height(16.dp)
                 )
+                // 시간 선택 UI 추가
+                TimeInput(state = timePickerState)
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                )
+                // 텍스트 입력 필드
                 TextField(
                     value = text,
                     onValueChange = { text = it },
@@ -170,10 +194,15 @@ fun ScheduleDialog(
         confirmButton = {
             Button(onClick = {
                 selectedDate?.let {
-                    onSave(it.toString(), text) // 저장 시 콜백 호출
+                    // 선택한 시간 가져오기
+                    val selectedTime = String.format(
+                        "%02d:%02d",
+                        timePickerState.hour,
+                        timePickerState.minute
+                    )
+                    onSave(it.toString(), text, selectedTime) // 날짜, 텍스트, 시간 모두 저장
                 }
-//                Toast.makeText(context, if (isEditMode) "수정 완료" else "추가 완료", Toast.LENGTH_LONG).show()
-                onDismissRequest()
+                onDismissRequest() // 다이얼로그 닫기
             }) {
                 Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트 변경
             }

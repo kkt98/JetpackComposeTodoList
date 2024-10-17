@@ -121,7 +121,13 @@ fun SchedulesList(
         // 실제 일정 내용을 담고 있는 부분
         Box(
             modifier = Modifier
-                .offset { IntOffset(swipeableState.offset.value.roundToInt().coerceAtLeast(-sizePx.toInt() * 2), 0) }
+                .offset {
+                    IntOffset(
+                        swipeableState.offset.value
+                            .roundToInt()
+                            .coerceAtLeast(-sizePx.toInt() * 2), 0
+                    )
+                }
                 .background(Color.White)
                 .fillMaxSize()
         ) {
@@ -138,7 +144,7 @@ fun SchedulesList(
             onDismissRequest = { showEditDialog = false },
             selectedDate = selectedDate,
             initialText = schedule.plan,
-            onSave = { date, updatedPlan ->
+            onSave = { date, updatedPlan, time ->
                 viewModel.updateSchedule(schedule.copy(plan = updatedPlan))
                 showEditDialog = false
             },
@@ -153,6 +159,8 @@ fun ScheduleItem(schedule: PlanEntity) {
         modifier = Modifier.padding(16.dp)
     ) {
         androidx.compose.material3.Text("날짜: ${schedule.date}")
+        Spacer(modifier = Modifier.height(8.dp))
+        androidx.compose.material3.Text("시간: ${schedule.time}")
         Spacer(modifier = Modifier.height(8.dp))
         androidx.compose.material3.Text("일정: ${schedule.plan}")
     }
