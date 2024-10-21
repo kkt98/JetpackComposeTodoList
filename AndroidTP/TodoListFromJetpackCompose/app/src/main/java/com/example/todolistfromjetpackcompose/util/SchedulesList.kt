@@ -144,7 +144,7 @@ fun SchedulesList(
             onDismissRequest = { showEditDialog = false },
             selectedDate = selectedDate,
             initialText = schedule.plan,
-            onSave = { date, updatedPlan, time ->
+            onSave = { date, updatedPlan, time, alarmSet ->
                 viewModel.updateSchedule(schedule.copy(plan = updatedPlan))
                 showEditDialog = false
             },

@@ -1,9 +1,11 @@
 package com.example.todolistfromjetpackcompose.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolistfromjetpackcompose.repository.PlanRepository
 import com.example.todolistfromjetpackcompose.room.PlanEntity
+import com.example.todolistfromjetpackcompose.util.scheduleNotification
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,12 +36,18 @@ class CalenderPlanViewModel @Inject constructor(
     }
 
     // 일정 추가 기능
-    fun insertSchedule(date: String, plan: String, time: String) {
+    fun insertSchedule(context: Context, date: String, plan: String, time: String, alarm: Boolean) {
         viewModelScope.launch {
-            val planEntity = PlanEntity(date = date, plan = plan, time = time)
+            val planEntity = PlanEntity(date = date, plan = plan, time = time, alarm = alarm)
             planRepository.insertSchedule(planEntity)
             getSchedulesByDate(planEntity.date)
             _operationStatus.value = "저장 완료" // 저장 완료 상태 설정
+
+            if (alarm) {
+                // 알람 설정이 체크된 경우 알람 예약
+                val alarmId = planEntity.hashCode() // 고유한 알람 ID를 생성 (중복 방지를 위해)
+                scheduleNotification(context, date, time, alarmId, planEntity.plan )
+            }
         }
     }
 

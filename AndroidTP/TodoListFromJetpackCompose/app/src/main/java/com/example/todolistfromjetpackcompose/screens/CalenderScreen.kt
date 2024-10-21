@@ -5,6 +5,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.Checkbox
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
@@ -30,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -104,8 +107,8 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                 ScheduleDialog(
                     onDismissRequest = { showDialog = false },  // 다이얼로그 닫기
                     selectedDate = selectedDate,  // 선택된 날짜를 다이얼로그에 전달
-                    onSave = { date, plan, time ->  // 저장 버튼 클릭 시 동작 정의
-                        viewModel.insertSchedule(date, plan, time)  // 새로운 일정 추가
+                    onSave = { date, plan, time, alarm ->  // 저장 버튼 클릭 시 동작 정의
+                        viewModel.insertSchedule(context, date, plan, time, alarm)  // 새로운 일정 추가
                     },
                     isEditMode = false  // 새 일정을 추가하는 모드
                 )
@@ -151,10 +154,11 @@ fun ScheduleDialog(
     onDismissRequest: () -> Unit,
     selectedDate: LocalDate?,
     initialText: String = "", // 기존 텍스트를 받아서 초기화
-    onSave: (String, String, String) -> Unit, // 시간도 포함하여 저장 콜백
+    onSave: (String, String, String, Boolean) -> Unit, // 시간도 포함하여 저장 콜백
     isEditMode: Boolean = false // 수정 모드인지 추가 모드인지 구분
 ) {
     var text by remember { mutableStateOf(initialText) } // 초기 텍스트 설정
+    var isAlarmSet by remember { mutableStateOf(false) } // 알람 설정 상태 저장
     val context = LocalContext.current // LocalContext로 context 가져오기
 
     // 현재 시간을 가져오는 캘린더 객체
@@ -181,7 +185,23 @@ fun ScheduleDialog(
                 Spacer(
                     Modifier
                         .fillMaxWidth()
-                        .height(16.dp)
+                        .height(8.dp)
+                )
+                // 알람 설정 체크박스 추가
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isAlarmSet,
+                        onCheckedChange = { isChecked -> isAlarmSet = isChecked }
+                    )
+                    Text("알람 설정")
+                }
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
                 )
                 // 텍스트 입력 필드
                 TextField(
@@ -200,7 +220,7 @@ fun ScheduleDialog(
                         timePickerState.hour,
                         timePickerState.minute
                     )
-                    onSave(it.toString(), text, selectedTime) // 날짜, 텍스트, 시간 모두 저장
+                    onSave(it.toString(), text, selectedTime, isAlarmSet)
                 }
                 onDismissRequest() // 다이얼로그 닫기
             }) {
