@@ -1,5 +1,9 @@
 package com.example.todolistfromjetpackcompose.screens
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -36,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todolistfromjetpackcompose.util.SchedulesList
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
@@ -153,56 +159,51 @@ fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
 fun ScheduleDialog(
     onDismissRequest: () -> Unit,
     selectedDate: LocalDate?,
-    initialText: String = "", // 기존 텍스트를 받아서 초기화
-    onSave: (String, String, String, Boolean) -> Unit, // 시간도 포함하여 저장 콜백
-    isEditMode: Boolean = false // 수정 모드인지 추가 모드인지 구분
+    initialText: String = "",
+    initialTime: String = "", // 초기 시간 추가
+    initialAlarm: Boolean = false, // 초기 알람 상태 추가
+    onSave: (String, String, String, Boolean) -> Unit,
+    isEditMode: Boolean = false
 ) {
-    var text by remember { mutableStateOf(initialText) } // 초기 텍스트 설정
-    var isAlarmSet by remember { mutableStateOf(false) } // 알람 설정 상태 저장
-    val context = LocalContext.current // LocalContext로 context 가져오기
+    var text by remember { mutableStateOf(initialText) }
+    var isAlarmSet by remember { mutableStateOf(initialAlarm) }
 
-    // 현재 시간을 가져오는 캘린더 객체
-    val currentTime = Calendar.getInstance()
+    // 초기 시간 설정
+    val (initialHour, initialMinute) = initialTime.split(":").map { it.toInt() }
     val timePickerState = rememberTimePickerState(
-        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
-        initialMinute = currentTime.get(Calendar.MINUTE),
-        is24Hour = false,  // 24시간 형식이 아닌 12시간 형식 사용
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = false,
     )
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(if (isEditMode) "일정 수정" else "일정 추가") }, // 다이얼로그 제목 변경
+        title = { Text(if (isEditMode) "일정 수정" else "일정 추가") },
         text = {
             Column {
                 Text("날짜: ${selectedDate.toString()}")
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(16.dp)
-                )
-                // 시간 선택 UI 추가
+                Spacer(Modifier.fillMaxWidth().height(16.dp))
+
+                // 시간 선택 UI
                 TimeInput(state = timePickerState)
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                )
-                // 알람 설정 체크박스 추가
+                Spacer(Modifier.fillMaxWidth().height(8.dp))
+
+                // 알람 설정 체크박스
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = isAlarmSet,
-                        onCheckedChange = { isChecked -> isAlarmSet = isChecked }
+                        onCheckedChange = { isChecked ->
+                            isAlarmSet = isChecked
+                        }
                     )
                     Text("알람 설정")
                 }
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                )
+
+                Spacer(Modifier.fillMaxWidth().height(8.dp))
+
                 // 텍스트 입력 필드
                 TextField(
                     value = text,
@@ -214,7 +215,6 @@ fun ScheduleDialog(
         confirmButton = {
             Button(onClick = {
                 selectedDate?.let {
-                    // 선택한 시간 가져오기
                     val selectedTime = String.format(
                         "%02d:%02d",
                         timePickerState.hour,
@@ -222,9 +222,9 @@ fun ScheduleDialog(
                     )
                     onSave(it.toString(), text, selectedTime, isAlarmSet)
                 }
-                onDismissRequest() // 다이얼로그 닫기
+                onDismissRequest()
             }) {
-                Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트 변경
+                Text(if (isEditMode) "수정" else "추가")
             }
         },
         dismissButton = {
@@ -233,4 +233,18 @@ fun ScheduleDialog(
             }
         }
     )
+}
+
+
+private fun checkOrRequestPermission(context: Context): Boolean {
+    return if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+        true
+    } else {
+        ActivityCompat.requestPermissions(
+            context as Activity,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            1001
+        )
+        false
+    }
 }

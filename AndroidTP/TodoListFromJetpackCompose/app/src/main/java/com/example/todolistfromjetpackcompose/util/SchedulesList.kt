@@ -144,15 +144,18 @@ fun SchedulesList(
             onDismissRequest = { showEditDialog = false },
             selectedDate = selectedDate,
             initialText = schedule.plan,
-            onSave = { date, updatedPlan, time, alarmSet ->
-                viewModel.updateSchedule(schedule.copy(plan = updatedPlan))
+            initialTime = schedule.time, // 기존 시간 전달
+            initialAlarm = schedule.alarm, // 기존 알람 상태 전달
+            onSave = { date, updatedPlan, updatedTime, alarmSet ->
+                viewModel.updateSchedule(
+                    schedule.copy(plan = updatedPlan, time = updatedTime, alarm = alarmSet)
+                )
                 showEditDialog = false
             },
             isEditMode = true
         )
     }
 }
-
 @Composable
 fun ScheduleItem(schedule: PlanEntity) {
     Column(
