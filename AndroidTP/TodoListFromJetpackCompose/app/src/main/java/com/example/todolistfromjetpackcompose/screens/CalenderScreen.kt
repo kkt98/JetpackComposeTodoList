@@ -50,7 +50,6 @@ import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import java.time.LocalDate
 import java.time.temporal.WeekFields
-import java.util.Calendar
 import java.util.Locale
 
 @Composable
@@ -116,7 +115,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                     onSave = { date, plan, time, alarm ->  // 저장 버튼 클릭 시 동작 정의
                         viewModel.insertSchedule(context, date, plan, time, alarm)  // 새로운 일정 추가
                     },
-                    isEditMode = false  // 새 일정을 추가하는 모드
+                    isEditMode = false, // 새 일정을 추가하는 모드
                 )
             }
         }
@@ -163,10 +162,11 @@ fun ScheduleDialog(
     initialTime: String = "", // 초기 시간 추가
     initialAlarm: Boolean = false, // 초기 알람 상태 추가
     onSave: (String, String, String, Boolean) -> Unit,
-    isEditMode: Boolean = false
+    isEditMode: Boolean = false,
 ) {
     var text by remember { mutableStateOf(initialText) }
     var isAlarmSet by remember { mutableStateOf(initialAlarm) }
+    val context = LocalContext.current
 
     // 초기 시간 설정
     val (initialHour, initialMinute) = initialTime.split(":").map { it.toInt() }
@@ -196,7 +196,12 @@ fun ScheduleDialog(
                     Checkbox(
                         checked = isAlarmSet,
                         onCheckedChange = { isChecked ->
-                            isAlarmSet = isChecked
+
+                            if(checkOrRequestPermission(context)) {
+                                isAlarmSet = isChecked
+                            } else {
+                                Toast.makeText(context, "알림 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
                     Text("알람 설정")
