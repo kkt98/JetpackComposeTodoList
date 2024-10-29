@@ -1,8 +1,13 @@
 package com.example.todolistfromjetpackcompose
 
+import android.app.AlarmManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -26,16 +31,14 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 MainScreen()
             }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
-            }
+            NotificationPermissionRequest()
         }
 
     }
+
 }
+
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

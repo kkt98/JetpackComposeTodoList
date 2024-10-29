@@ -169,7 +169,11 @@ fun ScheduleDialog(
     val context = LocalContext.current
 
     // 초기 시간 설정
-    val (initialHour, initialMinute) = initialTime.split(":").map { it.toInt() }
+    val (initialHour, initialMinute) = if (initialTime.isNotEmpty()) {
+        initialTime.split(":").map { it.toIntOrNull() ?: 0 } // 숫자가 아닌 값은 기본값 0으로 처리
+    } else {
+        listOf(0, 0) // 기본 시간을 0:00으로 설정
+    }
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
@@ -196,12 +200,7 @@ fun ScheduleDialog(
                     Checkbox(
                         checked = isAlarmSet,
                         onCheckedChange = { isChecked ->
-
-                            if(checkOrRequestPermission(context)) {
-                                isAlarmSet = isChecked
-                            } else {
-                                Toast.makeText(context, "알림 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-                            }
+                            isAlarmSet = isChecked
                         }
                     )
                     Text("알람 설정")
@@ -238,18 +237,4 @@ fun ScheduleDialog(
             }
         }
     )
-}
-
-
-private fun checkOrRequestPermission(context: Context): Boolean {
-    return if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-        true
-    } else {
-        ActivityCompat.requestPermissions(
-            context as Activity,
-            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-            1001
-        )
-        false
-    }
 }
