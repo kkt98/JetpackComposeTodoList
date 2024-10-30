@@ -22,19 +22,19 @@ class NotificationReceiver : BroadcastReceiver() {
 
         val channelId = "schedule_alarm_channel"
         val channelName = "Schedule Alarm"
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
         // 알림 클릭 시 열릴 액티비티 설정 (필요에 따라 변경)
         val contentIntent = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT
+            context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_background)
-            .setContentTitle("Schedule Reminder")
+            .setContentTitle("알림")
             .setContentText(message)
             .setContentIntent(contentIntent)
             .setAutoCancel(true)

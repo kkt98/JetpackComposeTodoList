@@ -1,11 +1,16 @@
 package com.example.todolistfromjetpackcompose.util
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import java.util.Calendar
 
+@SuppressLint("ScheduleExactAlarm")
 fun scheduleNotification(context: Context, date: String, time: String, alarmId: Int, plan: String) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -35,9 +40,18 @@ fun scheduleNotification(context: Context, date: String, time: String, alarmId: 
     )
 
     // 알람 예약
-    alarmManager.setExact(
-        AlarmManager.RTC_WAKEUP,
-        calendar.timeInMillis,
-        pendingIntent
-    )
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            Log.e("AlarmError", "정확한 알람 설정 권한이 필요합니다.")
+        }
+
+        alarmManager.setExact(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )
+        Toast.makeText(context, "알람이 설정되었습니다.", Toast.LENGTH_SHORT).show()
+    } catch (e: SecurityException) {
+        Log.e("AlarmError", "알람 설정 실패: ${e.message}")
+    }
 }
