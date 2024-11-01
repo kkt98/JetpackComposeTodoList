@@ -64,7 +64,16 @@ class CalenderPlanViewModel @Inject constructor(
     fun updateSchedule(planEntity: PlanEntity) {
         viewModelScope.launch {
             planRepository.updatePlan(planEntity)
-            getSchedulesByDate(planEntity.date)
+            getAllSchedules()
+            _operationStatus.value = "수정 완료" // 수정 완료 상태 설정
+        }
+    }
+
+    // 모든 일정 수정 기능
+    fun getAllUpdateSchedule(planEntity: PlanEntity) {
+        viewModelScope.launch {
+            planRepository.updatePlan(planEntity)
+            getAllSchedules()
             _operationStatus.value = "수정 완료" // 수정 완료 상태 설정
         }
     }

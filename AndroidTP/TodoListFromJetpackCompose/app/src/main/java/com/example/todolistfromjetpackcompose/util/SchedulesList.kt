@@ -1,5 +1,6 @@
 package com.example.todolistfromjetpackcompose.util
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -32,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.todolistfromjetpackcompose.R
 import com.example.todolistfromjetpackcompose.room.PlanEntity
 import com.example.todolistfromjetpackcompose.screens.ScheduleDialog
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
@@ -159,7 +163,19 @@ fun ScheduleItem(schedule: PlanEntity) {
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
-        androidx.compose.material3.Text("날짜: ${schedule.date}")
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.compose.material3.Text("날짜: ${schedule.date}")
+            Spacer(modifier = Modifier.weight(1f)) // 빈 공간으로 아이콘을 오른쪽 끝으로 밀어냄
+            Image(
+                painter = painterResource(id = if (schedule.alarm) R.drawable.baseline_alarm_on_24 else R.drawable.baseline_alarm_off_24),
+                contentDescription = "bell Icon",
+                modifier = Modifier.size(24.dp))
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
         androidx.compose.material3.Text("시간: ${schedule.time}")
         Spacer(modifier = Modifier.height(8.dp))
