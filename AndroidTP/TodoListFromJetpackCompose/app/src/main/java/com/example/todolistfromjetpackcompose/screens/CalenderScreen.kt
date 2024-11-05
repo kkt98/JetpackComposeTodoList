@@ -158,7 +158,7 @@ fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     }
 }
 
-//일정 추가 다이얼로그
+// 일정 추가 다이얼로그
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleDialog(
@@ -244,5 +244,3 @@ fun ScheduleDialog(
         }
     )
 }
-
-

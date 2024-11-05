@@ -105,7 +105,7 @@ fun SchedulesList(
             TextButton(
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.deleteSchedule(schedule)
+                        viewModel.deleteSchedule(schedule) // 일정 삭제 기능 호출
                         swipeableState.snapTo(0)
                     }
                 },
@@ -133,7 +133,7 @@ fun SchedulesList(
                 .background(Color.White)
                 .fillMaxSize()
         ) {
-            ScheduleItem(schedule)
+            ScheduleItem(schedule) // 일정 아이템 표시
         }
     }
 
@@ -143,27 +143,29 @@ fun SchedulesList(
         val selectedDate = LocalDate.parse(schedule.date, dateFormatter)
 
         ScheduleDialog(
-            onDismissRequest = { showEditDialog = false },
+            onDismissRequest = { showEditDialog = false }, // 다이얼로그 닫기
             selectedDate = selectedDate,
-            initialText = schedule.plan,
+            initialText = schedule.plan, // 기존 일정 내용 전달
             initialTime = schedule.time, // 기존 시간 전달
             initialAlarm = schedule.alarm, // 기존 알람 상태 전달
-            onSave = { date, updatedPlan, updatedTime, alarmSet ->
+            onSave = { date, updatedPlan, updatedTime, alarmSet -> // 수정 후 저장 콜백
                 viewModel.updateSchedule(
                     schedule.copy(plan = updatedPlan, time = updatedTime, alarm = alarmSet)
                 )
                 showEditDialog = false
             },
-            isEditMode = true,
+            isEditMode = true, // 수정 모드 설정
         )
     }
 }
+
+// ScheduleItem 함수는 단일 일정 항목을 표시합니다.
 @Composable
 fun ScheduleItem(schedule: PlanEntity) {
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
-
+        // 상단에 날짜와 알람 아이콘 표시
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -177,8 +179,8 @@ fun ScheduleItem(schedule: PlanEntity) {
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        androidx.compose.material3.Text("시간: ${schedule.time}")
+        androidx.compose.material3.Text("시간: ${schedule.time}") // 일정 시간 표시
         Spacer(modifier = Modifier.height(8.dp))
-        androidx.compose.material3.Text("일정: ${schedule.plan}")
+        androidx.compose.material3.Text("일정: ${schedule.plan}") // 일정 내용 표시
     }
 }
