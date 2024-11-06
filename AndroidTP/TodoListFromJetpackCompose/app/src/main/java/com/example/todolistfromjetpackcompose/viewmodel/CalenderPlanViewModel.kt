@@ -25,6 +25,10 @@ class CalenderPlanViewModel @Inject constructor(
     private val _schedules = MutableStateFlow<List<PlanEntity>>(emptyList())
     val schedules: StateFlow<List<PlanEntity>> = _schedules
 
+    // 저장된 날짜 목록을 저장하는 StateFlow
+    private val _savedDates = MutableStateFlow<List<String>>(emptyList())
+    val savedDates: StateFlow<List<String>> = _savedDates
+
     // 주어진 날짜에 해당하는 일정 목록을 로드하는 함수
     fun getSchedulesByDate(date: String) {
         viewModelScope.launch {
@@ -69,12 +73,12 @@ class CalenderPlanViewModel @Inject constructor(
         }
     }
 
-    // 모든 일정 수정 기능
-    fun getAllUpdateSchedule(planEntity: PlanEntity) {
+    // 모든 일정을 조회하고, 일정이 있는 날짜만 저장
+    fun loadSavedDates() {
         viewModelScope.launch {
-            planRepository.updatePlan(planEntity)
-            getAllSchedules()
-            _operationStatus.value = "수정 완료" // 수정 완료 상태 설정
+            planRepository.getAllSchedules().collect { plans ->
+                _savedDates.value = plans.map { it.date }.distinct()
+            }
         }
     }
 

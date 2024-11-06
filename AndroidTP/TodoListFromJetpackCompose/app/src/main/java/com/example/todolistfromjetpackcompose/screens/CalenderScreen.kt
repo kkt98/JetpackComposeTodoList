@@ -1,24 +1,22 @@
 package com.example.todolistfromjetpackcompose.screens
 
-import android.Manifest
-import android.app.Activity
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
@@ -41,14 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.todolistfromjetpackcompose.NotificationPermissionRequest
 import com.example.todolistfromjetpackcompose.util.SchedulesList
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
 import io.github.boguszpawlowski.composecalendar.SelectableCalendar
@@ -66,18 +60,42 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val schedules by viewModel.schedules.collectAsState()
     // 작업 상태를 상태로 가져와서 UI에서 반영 (예: 토스트 메시지)
     val operationStatus by viewModel.operationStatus.collectAsState()
+    val savedDates by viewModel.savedDates.collectAsState()
+
+    // 저장된 날짜를 가져오기 위한 로직
+    LaunchedEffect(Unit) {
+        viewModel.loadSavedDates()
+    }
+
 
     // 달력 상태를 기억. SelectionMode.Single로 날짜 선택은 단일 모드
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single,
     )
 
-    // 선택 가능한 달력 컴포넌트 표시 (SelectableCalendar)
     SelectableCalendar(
         calendarState = calendarState,
-        firstDayOfWeek = WeekFields.of(Locale.KOREAN).firstDayOfWeek,  // 한국 달력 기준으로 주 시작일 설정
-    )
+        dayContent = { day ->
+            val isSavedDate = day.date.toString() in savedDates // 저장된 날짜에 해당하는지 확인
 
+            Box(
+                modifier = Modifier
+                    .padding(2.dp)
+                    .background(
+                        if (isSavedDate) Color(0xFF202E9C) else Color.Transparent, // 저장된 날짜일 때 다른 색상 적용
+                        shape = RoundedCornerShape(1.dp)
+                    )
+                    .fillMaxSize()
+                    .clickable { calendarState.selectionState.onDateSelected(day.date) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    color = if (isSavedDate) Color.Black else Color.Gray // 텍스트 색상 변경
+                )
+            }
+        }
+    )
     // 다이얼로그를 표시할지 여부를 기억하는 상태
     var showDialog by remember { mutableStateOf(false) }
     // 선택된 날짜를 가져옴 (Single 모드이므로 첫 번째 선택된 날짜만 가져옴)
