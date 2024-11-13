@@ -5,6 +5,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
@@ -40,7 +43,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todolistfromjetpackcompose.util.SchedulesList
@@ -62,6 +67,13 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val operationStatus by viewModel.operationStatus.collectAsState()
     val savedDates by viewModel.savedDates.collectAsState()
 
+    // savedDates를 LocalDate로 변환
+    val savedLocalDates = remember(savedDates) {
+        savedDates.mapNotNull { dateStr ->
+            try { LocalDate.parse(dateStr) } catch (e: Exception) { null }
+        }
+    }
+
     // 저장된 날짜를 가져오기 위한 로직
     LaunchedEffect(Unit) {
         viewModel.loadSavedDates()
@@ -73,29 +85,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         initialSelectionMode = SelectionMode.Single,
     )
 
-    SelectableCalendar(
-        calendarState = calendarState,
-        dayContent = { day ->
-            val isSavedDate = day.date.toString() in savedDates // 저장된 날짜에 해당하는지 확인
 
-            Box(
-                modifier = Modifier
-                    .padding(2.dp)
-                    .background(
-                        if (isSavedDate) Color(0xFF202E9C) else Color.Transparent, // 저장된 날짜일 때 다른 색상 적용
-                        shape = RoundedCornerShape(1.dp)
-                    )
-                    .fillMaxSize()
-                    .clickable { calendarState.selectionState.onDateSelected(day.date) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = day.date.dayOfMonth.toString(),
-                    color = if (isSavedDate) Color.Black else Color.Gray // 텍스트 색상 변경
-                )
-            }
-        }
-    )
     // 다이얼로그를 표시할지 여부를 기억하는 상태
     var showDialog by remember { mutableStateOf(false) }
     // 선택된 날짜를 가져옴 (Single 모드이므로 첫 번째 선택된 날짜만 가져옴)
@@ -106,44 +96,62 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         calendarState.selectionState.selection.joinToString { it.toString() }
     )
 
-    // 화면의 레이아웃을 정의하는 Scaffold
-    Scaffold(
-        // 플로팅 액션 버튼(FAB)은 선택된 날짜가 있을 때만 표시됨
-        floatingActionButton = {
-            if (selectedDate != null) {
-                FloatingActionButton(onClick = { showDialog = true }) {
-                    // FAB 아이콘을 추가 아이콘으로 설정
-                    Icon(Icons.Filled.Add, contentDescription = "Add")
-                }
-            }
-        }
-    ) {
-        // Column은 수직 레이아웃을 제공
-        Column(
-            modifier = Modifier.padding(it)  // Column 레이아웃의 내부 여백 설정
-        ) {
-            // 달력 컴포넌트를 다시 표시
-            SelectableCalendar(calendarState = calendarState)
+//    // 화면의 레이아웃을 정의하는 Scaffold
+//    Scaffold(
+//        // 플로팅 액션 버튼(FAB)은 선택된 날짜가 있을 때만 표시됨
+//        floatingActionButton = {
+//            if (selectedDate != null) {
+//                FloatingActionButton(onClick = { showDialog = true }) {
+//                    // FAB 아이콘을 추가 아이콘으로 설정
+//                    Icon(Icons.Filled.Add, contentDescription = "Add")
+//                }
+//            }
+//        }
+//    ) {
+//        // Column은 수직 레이아웃을 제공
+//        Column(
+//            modifier = Modifier.padding(it)  // Column 레이아웃의 내부 여백 설정
+//        ) {
+//            // 달력 컴포넌트를 다시 표시
+//            SelectableCalendar(calendarState = calendarState)
+//
+//
+//    }
 
-            // 선택된 날짜가 있을 경우에만 일정 리스트를 보여줌
-            if (selectedDate != null) {
-                // 선택된 날짜에 해당하는 일정 목록을 표시하는 컴포저블
-                ScheduleListScreen(viewModel)
-            }
+    SelectableCalendar(
+        calendarState = calendarState,
+        dayContent = { day ->
+            // 현재 달의 날짜인지 확인
+            val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month
 
-            // 다이얼로그가 표시되어야 하는 경우
-            if (showDialog) {
-                ScheduleDialog(
-                    onDismissRequest = { showDialog = false },  // 다이얼로그 닫기
-                    selectedDate = selectedDate,  // 선택된 날짜를 다이얼로그에 전달
-                    onSave = { date, plan, time, alarm ->  // 저장 버튼 클릭 시 동작 정의
-                        viewModel.insertSchedule(context, date, plan, time, alarm)  // 새로운 일정 추가
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .padding(5.dp)
+                    .background(
+                        color = if (day.isCurrentDay) Color.Green else Color.Transparent,
+                        shape = RectangleShape // 날짜를 라운드 처리
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.Gray,
+                        shape = RectangleShape // 테두리 추가
+                    )
+                    .clickable {
+                        // 날짜 클릭 시 수행할 동작
                     },
-                    isEditMode = false, // 새 일정을 추가하는 모드
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    color = if (isCurrentMonth) Color.Black else Color.Gray, // 현재 달은 파란색, 다른 달은 회색
+                    textAlign = TextAlign.Center
                 )
             }
         }
-    }
+    )
+
+
 
     // 작업 상태 변경 시 토스트 메시지를 보여주는 효과
     LaunchedEffect(operationStatus) {
