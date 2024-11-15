@@ -11,14 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
@@ -43,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,136 +48,140 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todolistfromjetpackcompose.util.SchedulesList
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
 import io.github.boguszpawlowski.composecalendar.SelectableCalendar
+import io.github.boguszpawlowski.composecalendar.day.DayState
 import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
+import io.github.boguszpawlowski.composecalendar.selection.DynamicSelectionState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import java.time.LocalDate
-import java.time.temporal.WeekFields
-import java.util.Locale
 
 @Composable
 fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
-    // 현재 Context 가져오기
     val context = LocalContext.current
-    // ViewModel에서 수집한 일정 데이터를 상태로 가져옴
     val schedules by viewModel.schedules.collectAsState()
-    // 작업 상태를 상태로 가져와서 UI에서 반영 (예: 토스트 메시지)
     val operationStatus by viewModel.operationStatus.collectAsState()
     val savedDates by viewModel.savedDates.collectAsState()
 
-    // savedDates를 LocalDate로 변환
     val savedLocalDates = remember(savedDates) {
         savedDates.mapNotNull { dateStr ->
             try { LocalDate.parse(dateStr) } catch (e: Exception) { null }
         }
     }
 
-    // 저장된 날짜를 가져오기 위한 로직
     LaunchedEffect(Unit) {
         viewModel.loadSavedDates()
     }
 
-
-    // 달력 상태를 기억. SelectionMode.Single로 날짜 선택은 단일 모드
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single,
     )
 
-
-    // 다이얼로그를 표시할지 여부를 기억하는 상태
     var showDialog by remember { mutableStateOf(false) }
-    // 선택된 날짜를 가져옴 (Single 모드이므로 첫 번째 선택된 날짜만 가져옴)
-    val selectedDate = calendarState.selectionState.selection.firstOrNull()
+    var selectedDate = calendarState.selectionState.selection.firstOrNull()
 
-    // 선택된 날짜에 따라 ViewModel에서 해당 날짜의 일정을 불러옴
-    viewModel.getSchedulesByDate(
-        calendarState.selectionState.selection.joinToString { it.toString() }
-    )
+    // 선택된 날짜에 따라 ViewModel에서 일정 가져오기
+    LaunchedEffect(selectedDate) {
+        selectedDate?.let {
+            viewModel.getSchedulesByDate(it.toString())
+        }
+    }
 
-//    // 화면의 레이아웃을 정의하는 Scaffold
-//    Scaffold(
-//        // 플로팅 액션 버튼(FAB)은 선택된 날짜가 있을 때만 표시됨
-//        floatingActionButton = {
-//            if (selectedDate != null) {
-//                FloatingActionButton(onClick = { showDialog = true }) {
-//                    // FAB 아이콘을 추가 아이콘으로 설정
-//                    Icon(Icons.Filled.Add, contentDescription = "Add")
-//                }
-//            }
-//        }
-//    ) {
-//        // Column은 수직 레이아웃을 제공
-//        Column(
-//            modifier = Modifier.padding(it)  // Column 레이아웃의 내부 여백 설정
-//        ) {
-//            // 달력 컴포넌트를 다시 표시
-//            SelectableCalendar(calendarState = calendarState)
-//
-//
-//    }
-
-    SelectableCalendar(
-        calendarState = calendarState,
-        dayContent = { day ->
-            // 현재 달의 날짜인지 확인
-            val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month
-
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .padding(5.dp)
-                    .background(
-                        color = if (day.isCurrentDay) Color.Green else Color.Transparent,
-                        shape = RectangleShape // 날짜를 라운드 처리
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Color.Gray,
-                        shape = RectangleShape // 테두리 추가
-                    )
-                    .clickable {
-                        // 날짜 클릭 시 수행할 동작
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = day.date.dayOfMonth.toString(),
-                    color = if (isCurrentMonth) Color.Black else Color.Gray, // 현재 달은 파란색, 다른 달은 회색
-                    textAlign = TextAlign.Center
-                )
+    Scaffold(
+        floatingActionButton = {
+            if (selectedDate != null) {
+                FloatingActionButton(onClick = { showDialog = true }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add")
+                }
             }
         }
-    )
+    ) { paddingValues ->
+        Column(modifier = Modifier.padding(paddingValues)) {
+            SelectableCalendar(
+                calendarState = calendarState,
+                dayContent = { day ->
+                    val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month
+                    val isSelected = day.date == selectedDate // 클릭된 날짜인지 확인
 
 
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .padding(5.dp)
+                            .background(
+                                color = when{
+                                    isSelected -> Color.Gray
+                                    else -> Color.Transparent },
+                                shape = RoundedCornerShape(12.dp) // 모서리를 둥글게 설정
+                            )
+                            .then(
+                                if (isCurrentMonth) {
+                                    Modifier.border(
+                                        width = 1.dp,
+                                        color = calculateBorderColor(day, savedLocalDates),
+                                        shape = RoundedCornerShape(12.dp) // 모서리를 둥글게 설정
+                                    )
+                                } else Modifier // 이번 달이 아닌 경우 border 제거
+                            )
+                            .clickable {
+                                calendarState.selectionState.onDateSelected(day.date)
+                                selectedDate = day.date // 선택된 날짜 업데이트
 
-    // 작업 상태 변경 시 토스트 메시지를 보여주는 효과
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.date.dayOfMonth.toString(),
+                            color = if (isCurrentMonth) Color.Black else Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            )
+
+            // 일정 목록 표시
+            if (selectedDate != null && schedules.isNotEmpty()) {
+                Text(
+                    text = "일정",
+                    modifier = Modifier.padding(8.dp),
+                    style = androidx.compose.material.MaterialTheme.typography.h6
+                )
+                LazyColumn {
+                    items(schedules) { schedule ->
+                        SchedulesList(schedule = schedule, viewModel = viewModel)
+                    }
+                }
+            }
+        }
+    }
+
+    // 다이얼로그 표시
+    if (showDialog) {
+        ScheduleDialog(
+            onDismissRequest = { showDialog = false },
+            selectedDate = selectedDate,
+            onSave = { date, plan, time, alarm ->
+                viewModel.insertSchedule(context, date, plan, time, alarm)
+                showDialog = false
+            },
+            isEditMode = false
+        )
+    }
+
     LaunchedEffect(operationStatus) {
         operationStatus?.let {
-            // 메인 스레드에서 Toast 실행
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             }
-            // 토스트 메시지 후 작업 상태 초기화
             viewModel.resetOperationStatus()
         }
     }
 }
 
-// 일정 리스트
 @Composable
-fun ScheduleListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
-    val schedules by viewModel.schedules.collectAsState()
-
-    Scaffold { paddingValues ->  // paddingValues 추가
-        Column(modifier = Modifier.padding(paddingValues)) {  // paddingValues 적용
-            LazyColumn {  // LazyColumn을 통해 일정 목록을 렌더링
-                items(schedules) { schedule ->  // 각 일정 항목을 개별적으로 처리
-                    Log.d("saveschedle", schedule.toString())
-
-                    SchedulesList(schedule = schedule, viewModel = viewModel)  // 스와이프 가능한 아이템으로 처리
-                }
-            }
-        }
+fun calculateBorderColor(day: DayState<DynamicSelectionState>, savedLocalDates: List<LocalDate>): Color {
+    return when {
+        day.isCurrentDay -> Color.Green // 오늘 날짜는 녹색
+        day.date in savedLocalDates -> Color.Blue // 저장된 일정이 있는 날짜는 파란색
+        else -> Color.Gray // 기본 테두리 색상
     }
 }
 
@@ -218,11 +219,17 @@ fun ScheduleDialog(
         text = {
             Column {
                 Text("날짜: ${selectedDate.toString()}")
-                Spacer(Modifier.fillMaxWidth().height(16.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(16.dp))
 
                 // 시간 선택 UI
                 TimeInput(state = timePickerState)
-                Spacer(Modifier.fillMaxWidth().height(8.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp))
 
                 // 알람 설정 체크박스
                 Row(
@@ -238,7 +245,10 @@ fun ScheduleDialog(
                     Text("알람 설정")
                 }
 
-                Spacer(Modifier.fillMaxWidth().height(8.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp))
 
                 // 텍스트 입력 필드
                 TextField(
