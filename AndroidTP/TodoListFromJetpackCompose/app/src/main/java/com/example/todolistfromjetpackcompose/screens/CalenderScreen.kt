@@ -56,37 +56,46 @@ import java.time.LocalDate
 
 @Composable
 fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
+    // Context를 가져오기 (ex. Toast 메시지를 표시할 때 사용)
     val context = LocalContext.current
+
+    // ViewModel에서 일정, 작업 상태, 저장된 날짜들을 가져옴
     val schedules by viewModel.schedules.collectAsState()
     val operationStatus by viewModel.operationStatus.collectAsState()
     val savedDates by viewModel.savedDates.collectAsState()
 
+    // 저장된 날짜 문자열을 LocalDate 객체로 변환 (잘못된 포맷은 제외)
     val savedLocalDates = remember(savedDates) {
         savedDates.mapNotNull { dateStr ->
             try { LocalDate.parse(dateStr) } catch (e: Exception) { null }
         }
     }
 
+    // 화면이 처음 실행될 때 저장된 날짜를 ViewModel에서 불러옴
     LaunchedEffect(Unit) {
         viewModel.loadSavedDates()
     }
 
+    // 달력의 상태 저장 (선택 모드는 Single 선택만 가능)
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single,
     )
 
+    // 다이얼로그를 보여줄지 여부와 선택된 날짜 상태를 저장
     var showDialog by remember { mutableStateOf(false) }
     var selectedDate = calendarState.selectionState.selection.firstOrNull()
 
-    // 선택된 날짜에 따라 ViewModel에서 일정 가져오기
+    // 선택된 날짜가 변경될 때 ViewModel에서 해당 날짜의 일정을 불러옴
     LaunchedEffect(selectedDate) {
         selectedDate?.let {
             viewModel.getSchedulesByDate(it.toString())
         }
     }
 
+    // 화면의 전체 구조 (Scaffold를 사용해 플로팅 버튼 포함)
     Scaffold(
         floatingActionButton = {
+            // 날짜가 선택된 경우 일정 추가 버튼 표시
             if (selectedDate != null) {
                 FloatingActionButton(onClick = { showDialog = true }) {
                     Icon(Icons.Filled.Add, contentDescription = "Add")
@@ -95,41 +104,41 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
+            // 달력 UI 구성
             SelectableCalendar(
                 calendarState = calendarState,
                 dayContent = { day ->
                     val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month
                     val isSelected = day.date == selectedDate // 클릭된 날짜인지 확인
 
-
                     Box(
                         modifier = Modifier
-                            .size(60.dp)
-                            .padding(5.dp)
+                            .size(60.dp) // 날짜 크기
+                            .padding(5.dp) // 날짜 내부 여백
                             .background(
-                                color = when{
-                                    isSelected -> Color.Gray
-                                    else -> Color.Transparent },
+                                color = when {
+                                    isSelected -> Color(0xFFD4D4D5) // 선택된 날짜 배경색
+                                    else -> Color.Transparent
+                                },
                                 shape = RoundedCornerShape(12.dp) // 모서리를 둥글게 설정
                             )
                             .then(
                                 if (isCurrentMonth) {
                                     Modifier.border(
                                         width = 1.dp,
-                                        color = calculateBorderColor(day, savedLocalDates),
-                                        shape = RoundedCornerShape(12.dp) // 모서리를 둥글게 설정
+                                        color = calculateBorderColor(day, savedLocalDates), // 테두리 색상 계산
+                                        shape = RoundedCornerShape(12.dp)
                                     )
-                                } else Modifier // 이번 달이 아닌 경우 border 제거
+                                } else Modifier // 이번 달이 아닌 경우 테두리 제거
                             )
                             .clickable {
                                 calendarState.selectionState.onDateSelected(day.date)
                                 selectedDate = day.date // 선택된 날짜 업데이트
-
                             },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = day.date.dayOfMonth.toString(),
+                            text = day.date.dayOfMonth.toString(), // 날짜 표시
                             color = if (isCurrentMonth) Color.Black else Color.Gray,
                             textAlign = TextAlign.Center
                         )
@@ -146,14 +155,14 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                 )
                 LazyColumn {
                     items(schedules) { schedule ->
-                        SchedulesList(schedule = schedule, viewModel = viewModel)
+                        SchedulesList(schedule = schedule, viewModel = viewModel) // 일정 아이템 렌더링
                     }
                 }
             }
         }
     }
 
-    // 다이얼로그 표시
+    // 다이얼로그 표시 (일정 추가)
     if (showDialog) {
         ScheduleDialog(
             onDismissRequest = { showDialog = false },
@@ -166,6 +175,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         )
     }
 
+    // 작업 상태 변경 시 Toast 메시지 표시
     LaunchedEffect(operationStatus) {
         operationStatus?.let {
             Handler(Looper.getMainLooper()).post {
@@ -176,6 +186,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     }
 }
 
+// 테두리 색상을 계산 (오늘 날짜, 저장된 날짜, 기본 색상)
 @Composable
 fun calculateBorderColor(day: DayState<DynamicSelectionState>, savedLocalDates: List<LocalDate>): Color {
     return when {
@@ -189,14 +200,15 @@ fun calculateBorderColor(day: DayState<DynamicSelectionState>, savedLocalDates: 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleDialog(
-    onDismissRequest: () -> Unit,
+    onDismissRequest: () -> Unit, // 다이얼로그 종료 콜백
     selectedDate: LocalDate?,
-    initialText: String = "",
-    initialTime: String = "", // 초기 시간 추가
-    initialAlarm: Boolean = false, // 초기 알람 상태 추가
-    onSave: (String, String, String, Boolean) -> Unit,
-    isEditMode: Boolean = false,
+    initialText: String = "", // 초기 입력값
+    initialTime: String = "", // 초기 시간
+    initialAlarm: Boolean = false, // 초기 알람 상태
+    onSave: (String, String, String, Boolean) -> Unit, // 저장 콜백
+    isEditMode: Boolean = false, // 수정 모드 여부
 ) {
+    // 입력 필드 상태 관리
     var text by remember { mutableStateOf(initialText) }
     var isAlarmSet by remember { mutableStateOf(initialAlarm) }
     val context = LocalContext.current
@@ -215,21 +227,15 @@ fun ScheduleDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(if (isEditMode) "일정 수정" else "일정 추가") },
+        title = { Text(if (isEditMode) "일정 수정" else "일정 추가") }, // 다이얼로그 제목
         text = {
             Column {
                 Text("날짜: ${selectedDate.toString()}")
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(16.dp))
+                Spacer(Modifier.fillMaxWidth().height(16.dp))
 
                 // 시간 선택 UI
                 TimeInput(state = timePickerState)
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(8.dp))
+                Spacer(Modifier.fillMaxWidth().height(8.dp))
 
                 // 알람 설정 체크박스
                 Row(
@@ -245,10 +251,7 @@ fun ScheduleDialog(
                     Text("알람 설정")
                 }
 
-                Spacer(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(8.dp))
+                Spacer(Modifier.fillMaxWidth().height(8.dp))
 
                 // 텍스트 입력 필드
                 TextField(
@@ -262,7 +265,7 @@ fun ScheduleDialog(
             Button(onClick = {
                 selectedDate?.let {
                     val selectedTime = String.format(
-                        "%02d:%02d",
+                        "%02d:%02d", // 시간 형식 (HH:mm)
                         timePickerState.hour,
                         timePickerState.minute
                     )
