@@ -8,4 +8,4 @@ abstract class PlanDatabase: RoomDatabase() {
 
     abstract fun planDao(): PlanDao
 
-}
+}//tlqkf dhormfjsmsep
