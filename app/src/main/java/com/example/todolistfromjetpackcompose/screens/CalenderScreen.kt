@@ -60,9 +60,9 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
     // ViewModel에서 일정, 작업 상태, 저장된 날짜들을 가져옴
-    val schedules by viewModel.schedules.collectAsState()
-    val operationStatus by viewModel.operationStatus.collectAsState()
-    val savedDates by viewModel.savedDates.collectAsState()
+    val schedules by viewModel.schedules.collectAsState() // 일정 데이터
+    val operationStatus by viewModel.operationStatus.collectAsState() // 작업 상태 (ex. 성공/실패 메시지)
+    val savedDates by viewModel.savedDates.collectAsState() // 저장된 날짜 리스트
 
     // 저장된 날짜 문자열을 LocalDate 객체로 변환 (잘못된 포맷은 제외)
     val savedLocalDates = remember(savedDates) {
@@ -71,7 +71,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         }
     }
 
-    // 화면이 처음 실행될 때 저장된 날짜를 ViewModel에서 불러옴
+    // 화면이 처음 실행될 때 ViewModel에서 저장된 날짜를 불러옴
     LaunchedEffect(Unit) {
         viewModel.loadSavedDates()
     }
@@ -82,13 +82,13 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     )
 
     // 다이얼로그를 보여줄지 여부와 선택된 날짜 상태를 저장
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedDate = calendarState.selectionState.selection.firstOrNull()
+    var showDialog by remember { mutableStateOf(false) } // 다이얼로그 표시 여부
+    var selectedDate = calendarState.selectionState.selection.firstOrNull() // 선택된 날짜 상태
 
     // 선택된 날짜가 변경될 때 ViewModel에서 해당 날짜의 일정을 불러옴
     LaunchedEffect(selectedDate) {
         selectedDate?.let {
-            viewModel.getSchedulesByDate(it.toString())
+            viewModel.getSchedulesByDate(it.toString()) // 선택된 날짜로 일정 가져오기
         }
     }
 
@@ -98,7 +98,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
             // 날짜가 선택된 경우 일정 추가 버튼 표시
             if (selectedDate != null) {
                 FloatingActionButton(onClick = { showDialog = true }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add")
+                    Icon(Icons.Filled.Add, contentDescription = "Add") // 플로팅 버튼 아이콘
                 }
             }
         }
@@ -108,9 +108,10 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
             SelectableCalendar(
                 calendarState = calendarState,
                 dayContent = { day ->
-                    val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month
-                    val isSelected = day.date == selectedDate // 클릭된 날짜인지 확인
+                    val isCurrentMonth = day.date.month == calendarState.monthState.currentMonth.month // 현재 달 확인
+                    val isSelected = day.date == selectedDate // 선택된 날짜인지 확인
 
+                    // 날짜 박스 스타일
                     Box(
                         modifier = Modifier
                             .size(60.dp) // 날짜 크기
@@ -132,15 +133,15 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                                 } else Modifier // 이번 달이 아닌 경우 테두리 제거
                             )
                             .clickable {
-                                calendarState.selectionState.onDateSelected(day.date)
+                                calendarState.selectionState.onDateSelected(day.date) // 날짜 선택
                                 selectedDate = day.date // 선택된 날짜 업데이트
                             },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = day.date.dayOfMonth.toString(), // 날짜 표시
-                            color = if (isCurrentMonth) Color.Black else Color.Gray,
-                            textAlign = TextAlign.Center
+                            color = if (isCurrentMonth) Color.Black else Color.Gray, // 이번 달/다른 달 텍스트 색상
+                            textAlign = TextAlign.Center //가운데 정렬
                         )
                     }
                 }
@@ -151,7 +152,7 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                 Text(
                     text = "일정",
                     modifier = Modifier.padding(8.dp),
-                    style = androidx.compose.material.MaterialTheme.typography.h6
+                    style = androidx.compose.material.MaterialTheme.typography.h6 // 제목 스타일
                 )
                 LazyColumn {
                     items(schedules) { schedule ->
@@ -165,13 +166,13 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     // 다이얼로그 표시 (일정 추가)
     if (showDialog) {
         ScheduleDialog(
-            onDismissRequest = { showDialog = false },
-            selectedDate = selectedDate,
-            onSave = { date, plan, time, alarm ->
-                viewModel.insertSchedule(context, date, plan, time, alarm)
-                showDialog = false
+            onDismissRequest = { showDialog = false }, // 다이얼로그 닫기
+            selectedDate = selectedDate, // 선택된 날짜 전달
+            onSave = { date, plan, time, alarm -> // 일정 저장 콜백
+                viewModel.insertSchedule(context, date, plan, time, alarm) // ViewModel에 저장 요청
+                showDialog = false // 다이얼로그 닫기
             },
-            isEditMode = false
+            isEditMode = false // 추가 모드로 설정
         )
     }
 
@@ -179,9 +180,9 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     LaunchedEffect(operationStatus) {
         operationStatus?.let {
             Handler(Looper.getMainLooper()).post {
-                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show() // Toast 표시
             }
-            viewModel.resetOperationStatus()
+            viewModel.resetOperationStatus() // 작업 상태 초기화
         }
     }
 }
@@ -201,7 +202,7 @@ fun calculateBorderColor(day: DayState<DynamicSelectionState>, savedLocalDates: 
 @Composable
 fun ScheduleDialog(
     onDismissRequest: () -> Unit, // 다이얼로그 종료 콜백
-    selectedDate: LocalDate?,
+    selectedDate: LocalDate?, // 선택된 날짜
     initialText: String = "", // 초기 입력값
     initialTime: String = "", // 초기 시간
     initialAlarm: Boolean = false, // 초기 알람 상태
@@ -209,8 +210,8 @@ fun ScheduleDialog(
     isEditMode: Boolean = false, // 수정 모드 여부
 ) {
     // 입력 필드 상태 관리
-    var text by remember { mutableStateOf(initialText) }
-    var isAlarmSet by remember { mutableStateOf(initialAlarm) }
+    var text by remember { mutableStateOf(initialText) } // 일정 내용
+    var isAlarmSet by remember { mutableStateOf(initialAlarm) } // 알람 설정 상태
     val context = LocalContext.current
 
     // 초기 시간 설정
@@ -222,7 +223,7 @@ fun ScheduleDialog(
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour,
         initialMinute = initialMinute,
-        is24Hour = false,
+        is24Hour = false, // 24시간제 사용 여부
     )
 
     AlertDialog(
@@ -230,8 +231,8 @@ fun ScheduleDialog(
         title = { Text(if (isEditMode) "일정 수정" else "일정 추가") }, // 다이얼로그 제목
         text = {
             Column {
-                Text("날짜: ${selectedDate.toString()}")
-                Spacer(Modifier.fillMaxWidth().height(16.dp))
+                Text("날짜: ${selectedDate.toString()}") // 선택된 날짜 표시
+                Spacer(Modifier.fillMaxWidth().height(16.dp)) // 여백 추가
 
                 // 시간 선택 UI
                 TimeInput(state = timePickerState)
@@ -243,10 +244,8 @@ fun ScheduleDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = isAlarmSet,
-                        onCheckedChange = { isChecked ->
-                            isAlarmSet = isChecked
-                        }
+                        checked = isAlarmSet, // 체크박스 상태
+                        onCheckedChange = { isChecked -> isAlarmSet = isChecked } // 체크 상태 변경
                     )
                     Text("알람 설정")
                 }
@@ -256,8 +255,8 @@ fun ScheduleDialog(
                 // 텍스트 입력 필드
                 TextField(
                     value = text,
-                    onValueChange = { text = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { text = it }, // 입력값 변경
+                    modifier = Modifier.fillMaxWidth(), // 가로 채우기
                 )
             }
         },
@@ -269,16 +268,16 @@ fun ScheduleDialog(
                         timePickerState.hour,
                         timePickerState.minute
                     )
-                    onSave(it.toString(), text, selectedTime, isAlarmSet)
+                    onSave(it.toString(), text, selectedTime, isAlarmSet) // 저장 콜백 호출
                 }
-                onDismissRequest()
+                onDismissRequest() // 다이얼로그 닫기
             }) {
-                Text(if (isEditMode) "수정" else "추가")
+                Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트
             }
         },
         dismissButton = {
             Button(onClick = onDismissRequest) {
-                Text("취소")
+                Text("취소") // 취소 버튼
             }
         }
     )
