@@ -20,10 +20,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Checkbox
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
@@ -42,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -97,7 +101,10 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
         floatingActionButton = {
             // 날짜가 선택된 경우 일정 추가 버튼 표시
             if (selectedDate != null) {
-                FloatingActionButton(onClick = { showDialog = true }) {
+                FloatingActionButton(
+                    onClick = { showDialog = true },
+                    backgroundColor =  Color(0xFFB3E5FC)
+                ) {
                     Icon(Icons.Filled.Add, contentDescription = "Add") // 플로팅 버튼 아이콘
                 }
             }
@@ -127,7 +134,10 @@ fun CalenderScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
                                 if (isCurrentMonth) {
                                     Modifier.border(
                                         width = 1.dp,
-                                        color = calculateBorderColor(day, savedLocalDates), // 테두리 색상 계산
+                                        color = calculateBorderColor(
+                                            day,
+                                            savedLocalDates
+                                        ), // 테두리 색상 계산
                                         shape = RoundedCornerShape(12.dp)
                                     )
                                 } else Modifier // 이번 달이 아닌 경우 테두리 제거
@@ -232,11 +242,17 @@ fun ScheduleDialog(
         text = {
             Column {
                 Text("날짜: ${selectedDate.toString()}") // 선택된 날짜 표시
-                Spacer(Modifier.fillMaxWidth().height(16.dp)) // 여백 추가
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)) // 여백 추가
 
                 // 시간 선택 UI
                 TimeInput(state = timePickerState)
-                Spacer(Modifier.fillMaxWidth().height(8.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp))
 
                 // 알람 설정 체크박스
                 Row(
@@ -250,7 +266,10 @@ fun ScheduleDialog(
                     Text("알람 설정")
                 }
 
-                Spacer(Modifier.fillMaxWidth().height(8.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(8.dp))
 
                 // 텍스트 입력 필드
                 TextField(
@@ -261,24 +280,35 @@ fun ScheduleDialog(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                selectedDate?.let {
-                    val selectedTime = String.format(
-                        "%02d:%02d", // 시간 형식 (HH:mm)
-                        timePickerState.hour,
-                        timePickerState.minute
-                    )
-                    onSave(it.toString(), text, selectedTime, isAlarmSet) // 저장 콜백 호출
-                }
-                onDismissRequest() // 다이얼로그 닫기
-            }) {
+            Button(
+                onClick = {
+                    selectedDate?.let {
+                        val selectedTime = String.format(
+                            "%02d:%02d", // 시간 형식 (HH:mm)
+                            timePickerState.hour,
+                            timePickerState.minute
+                        )
+                        onSave(it.toString(), text, selectedTime, isAlarmSet) // 저장 콜백 호출
+                    }
+                    onDismissRequest() // 다이얼로그 닫기
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFB3E5FC), // 버튼 배경색 설정
+                )
+            ) {
                 Text(if (isEditMode) "수정" else "추가") // 버튼 텍스트
             }
         },
         dismissButton = {
-            Button(onClick = onDismissRequest) {
-                Text("취소") // 취소 버튼
+            Button(
+                onClick = onDismissRequest,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFB3E5FC), // 버튼 배경색 설정
+                )
+            ) {
+                Text("취소") // 버튼 텍스트
             }
         }
+
     )
 }
