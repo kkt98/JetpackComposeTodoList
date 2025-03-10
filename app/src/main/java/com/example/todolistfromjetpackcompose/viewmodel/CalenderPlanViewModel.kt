@@ -56,19 +56,25 @@ class CalenderPlanViewModel @Inject constructor(
     }
 
     // 일정 삭제 기능
-    fun deleteSchedule(planEntity: PlanEntity) {
+    fun deleteSchedule(planEntity: PlanEntity, plan: String) {
         viewModelScope.launch {
             planRepository.deletePlan(planEntity)
-            getSchedulesByDate(planEntity.date)
+            when (plan) {
+                "selectPlan" -> getSchedulesByDate(planEntity.date)
+                else -> getAllSchedules()
+            }
             _operationStatus.value = "삭제 완료" // 삭제 완료 상태 설정
         }
     }
 
     // 일정 수정 기능
-    fun updateSchedule(planEntity: PlanEntity) {
+    fun updateSchedule(planEntity: PlanEntity, plan: String) {
         viewModelScope.launch {
             planRepository.updatePlan(planEntity)
-            getAllSchedules()
+            when (plan) {
+                "selectPlan" -> getSchedulesByDate(planEntity.date)
+                else -> getAllSchedules()
+            }
             _operationStatus.value = "수정 완료" // 수정 완료 상태 설정
         }
     }

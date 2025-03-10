@@ -53,7 +53,8 @@ import kotlin.math.roundToInt
 @Composable
 fun SchedulesList(
     schedule: PlanEntity,
-    viewModel: CalenderPlanViewModel = hiltViewModel()
+    viewModel: CalenderPlanViewModel = hiltViewModel(),
+    plan: String
 ) {
     var showEditDialog by remember { mutableStateOf(false) }  // 수정 다이얼로그를 표시할지 여부를 기억하는 상태
     val coroutineScope = rememberCoroutineScope()
@@ -105,7 +106,7 @@ fun SchedulesList(
             TextButton(
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.deleteSchedule(schedule) // 일정 삭제 기능 호출
+                        viewModel.deleteSchedule(schedule, plan) // 일정 삭제 기능 호출
                         swipeableState.snapTo(0)
                     }
                 },
@@ -151,6 +152,7 @@ fun SchedulesList(
             onSave = { date, updatedPlan, updatedTime, alarmSet -> // 수정 후 저장 콜백
                 viewModel.updateSchedule(
                     schedule.copy(plan = updatedPlan, time = updatedTime, alarm = alarmSet)
+                    , plan
                 )
                 showEditDialog = false
             },
