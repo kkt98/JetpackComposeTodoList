@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.todolistfromjetpackcompose.util.SchedulesList
 import com.example.todolistfromjetpackcompose.viewmodel.CalenderPlanViewModel
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -37,9 +38,13 @@ fun PlanListScreen(viewModel: CalenderPlanViewModel = hiltViewModel()) {
     // ViewModel에서 불러온 모든 일정 데이터
     val schedules by viewModel.schedules.collectAsState()
 
-    // schedules가 변경될 때마다 그룹화
+    // schedules가 변경될 때마다 그룹화 후 오름순 으로 정렬
     val groupedSchedules = remember(schedules) {
         schedules.groupBy { it.date }
+            .toSortedMap { date1, date2 ->
+                // 날짜 문자열을 LocalDate로 파싱하여 오름순 정렬
+                LocalDate.parse(date1).compareTo(LocalDate.parse(date2))
+            }
     }
 
     LazyColumn(
