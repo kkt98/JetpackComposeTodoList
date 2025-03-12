@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.todolistfromjetpackcompose"
+    namespace = "com.kkt98.todolistfromjetpackcompose"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.todolistfromjetpackcompose"
+        applicationId = "com.kkt98.todolistfromjetpackcompose"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
